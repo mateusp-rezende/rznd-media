@@ -46,26 +46,27 @@ interface IDataProvider {
 
 ## Tipos de Provedores de Dados
 
-### 1. Banco de Dados / SQL
-Permite a integração com bancos de dados relacionais (PostgreSQL, MySQL, SQL Server, SQLite).
-*   **Comportamento:** O usuário insere a string de conexão na interface da IDE. A plataforma carrega as tabelas e expõe as operações CRUD diretamente na interface visual.
-*   **Integração:** As alterações efetuadas na tabela de produtos dentro do *Workspace* do RZND Media são persistidas em tempo real no banco configurado.
+### 1. Banco de Dados / SQL Local (Pre-configurado)
+O sistema vem pre-configurado de fábrica com um banco de dados local (ex: SQLite ou banco embarcado).
+*   **Comportamento Zero-Setup:** Ao clonar/baixar o repositório do GitHub e rodar a aplicação, a conexão com o banco local é estabelecida de forma transparente. A aplicação web inicia em `localhost` pronta para uso imediato, sem necessidade de inserir credenciais ou strings de conexão complexas.
+*   **Gestão de Dados Interna:** O usuário cadastra, lê, atualiza e exclui (CRUD) os produtos de seu catálogo diretamente pela interface visual do RZND Media.
+*   **Persistência:** Quaisquer alterações feitas na grade de produtos são persistidas no banco local e alimentam o motor de lote no mesmo instante.
+*  **modelos html** já vem no sistema modelos padrões organização de pastas e etc.
+
 
 ### 2. Arquivos Locais (Excel, CSV, JSON)
-Permite carregar listas de produtos armazenadas localmente.
-*   **Comportamento:** O usuário seleciona o caminho absoluto do arquivo no disco. O RZND Media realiza o parse e renderiza os registros em formato de tabela no *Workspace*.
-*   **Sincronização:** Por ser um arquivo local, a edição direta do conteúdo é feita no software padrão do sistema operacional (ex: Excel). A IDE do RZND Media disponibiliza um botão de atalho rápido que redireciona e abre o arquivo no respectivo editor nativo e recarrega os dados automaticamente após o salvamento.
+Permite carregar listas adicionais de produtos armazenadas localmente no disco.
+*   **Sincronização:** Por ser um arquivo local, a IDE do RZND Media disponibiliza um botão de atalho rápido que abre o arquivo no respectivo editor nativo do sistema operacional e recarrega os dados após o salvamento.
 
-### 3. APIs REST / ERPs
-Permite ler dados diretamente de sistemas de gestão legados integrados.
+### 3. APIs REST / ERPs / Bot de Promoções (Pré-configurados)
+Permite conectar-se de forma complementar a sistemas de terceiros ou bots de escuta de promoções.
+*   **Comportamento:** O sistema traz integrações prontas por padrão. Os campos de configurações de chaves de API, endpoints ou palavras-chave de busca do bot só aparecem na tela quando o provedor correspondente é selecionado, servindo para ajustes finos do usuário.
 
 ---
 
-## Configuração e Registro de um Novo Provider
+## Configuração e Registro de um Novo Provider (Se aplicável)
 
-Os provedores são carregados dinamicamente via registro de metadados no arquivo de configurações globais da plataforma ou através da pasta `providers/` do projeto.
-
-Para registrar um novo provider, deve-se criar um manifesto JSON correspondente:
+Para fontes customizadas de terceiros (como novas APIs ou ERPs), os provedores são declarados via manifesto JSON correspondente definindo campos que aparecerão na UI para edição:
 
 ```json
 {

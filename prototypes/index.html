@@ -1,0 +1,3269 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RZND Media - Painel de Aprovação</title>
+    <style>
+        /* === RESET & VARIÁVEIS === */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        :root {
+            /* Tema Escuro (Padrão e Rígido) */
+            --bg-main: #18181c;
+            --bg-surface: #1e1e24;
+            --bg-sidebar: #111114;
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --border-color: #2d2d34;
+            --accent-color: #2563eb;
+            --accent-hover: #1d4ed8;
+            
+            /* Cores Semânticas */
+            --color-success: #10b981;
+            --color-error: #ef4444;
+            --color-warning: #f59e0b;
+        }
+
+        .light-theme {
+            /* Tema Claro */
+            --bg-main: #f3f4f6;
+            --bg-surface: #ffffff;
+            --bg-sidebar: #e5e7eb;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #d1d5db;
+            --accent-color: #1d4ed8;
+            --accent-hover: #1e40af;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            font-size: 13px;
+        }
+
+        /* === LAYOUT GLOBAL (IDE-like) === */
+        .app-container {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 24px);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 1. Barra de Atividades (Activity Bar) */
+        .activity-bar {
+            width: 48px;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 12px;
+            gap: 16px;
+        }
+
+        .activity-btn {
+            width: 36px;
+            height: 36px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .activity-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .activity-btn.active {
+            color: var(--accent-color);
+        }
+
+        .activity-btn.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 6px;
+            height: 24px;
+            width: 2px;
+            background-color: var(--accent-color);
+        }
+
+        /* 2. Explorer (Sidebar de Contexto) */
+        .context-explorer {
+            width: 260px;
+            background-color: var(--bg-surface);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .explorer-header {
+            padding: 10px 14px;
+            text-transform: uppercase;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .explorer-section {
+            padding: 8px 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .explorer-section-title {
+            padding: 4px 14px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .explorer-list {
+            list-style: none;
+            margin-top: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding: 0 8px;
+        }
+
+        .explorer-item {
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-radius: 2px;
+            background-color: rgba(255, 255, 255, 0.01);
+        }
+
+        .explorer-item:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .explorer-item.active {
+            background-color: rgba(37, 99, 235, 0.1);
+            border-color: rgba(37, 99, 235, 0.3);
+        }
+
+        .explorer-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .explorer-item-meta {
+            font-size: 11px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .explorer-item-badge {
+            font-size: 9px;
+            text-transform: uppercase;
+            font-weight: 700;
+            padding: 1px 4px;
+            border-radius: 2px;
+            background-color: var(--border-color);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .explorer-item-badge.success {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--color-success);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .explorer-item-badge.warning {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--color-warning);
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+
+        /* 3. Área de Trabalho Principal (Workspace) */
+        .main-workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-main);
+            overflow: hidden;
+        }
+
+        .workspace-header {
+            height: 35px;
+            background-color: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            justify-content: space-between;
+        }
+
+        .breadcrumbs {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .breadcrumbs span.active {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .workspace-content {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .workspace-content.active {
+            display: block;
+        }
+
+        /* === COMPONENTES DO WORKSPACE === */
+        .panel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .ui-panel {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            padding: 16px;
+        }
+
+        .panel-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .data-table th, .data-table td {
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .data-table th {
+            background-color: var(--bg-sidebar);
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .data-table tr:hover td {
+            background-color: rgba(255, 255, 255, 0.01);
+        }
+
+        .btn {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 2px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: #ffffff;
+            border: 1px solid var(--accent-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .btn-danger {
+            border-color: var(--color-error);
+            color: var(--color-error);
+        }
+
+        .btn-danger:hover {
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 6px 8px;
+            font-size: 12px;
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        /* Controle Segmentado / Abas de Botões */
+        .segmented-control {
+            display: flex;
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .segment-btn {
+            flex: 1;
+            background-color: var(--bg-main);
+            color: var(--text-secondary);
+            border: none;
+            padding: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .segment-btn:not(:last-child) {
+            border-right: 1px solid var(--border-color);
+        }
+
+        .segment-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .segment-btn.active {
+            background-color: var(--accent-color);
+            color: #ffffff;
+        }
+
+        /* === MODEL / CONSOLE MODAL === */
+        .log-terminal-modal {
+            position: fixed;
+            bottom: 40px;
+            right: 20px;
+            width: 500px;
+            background-color: #0b0b0e;
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .log-terminal-modal.show {
+            display: flex;
+        }
+
+        .terminal-header {
+            background-color: var(--bg-sidebar);
+            border-bottom: 1px solid var(--border-color);
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .terminal-panel {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            padding: 12px;
+            color: #d1d5db;
+            height: 180px;
+            overflow-y: auto;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .terminal-line {
+            margin-bottom: 2px;
+        }
+
+        .terminal-line .time {
+            color: var(--text-secondary);
+        }
+
+        .terminal-line .success { color: var(--color-success); }
+        .terminal-line .info { color: var(--accent-color); }
+        .terminal-line .warning { color: var(--color-warning); }
+
+        /* === DASHBOARD DE APROVAÇÃO (3 COLUNAS INTEGRADO) === */
+        .approval-workspace {
+            display: flex;
+            height: calc(100vh - 59px); /* Altura total descontando headers/footers */
+            position: relative;
+        }
+
+        .approval-center {
+            flex: 1;
+            background-color: var(--bg-main);
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .approval-center-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        .approval-preview-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 360px;
+            padding: 24px;
+        }
+
+        .approval-right {
+            width: 320px;
+            background-color: var(--bg-surface);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        /* Popover de Exportação */
+        .export-dropdown-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .export-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 4px);
+            right: 0;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            width: 180px;
+            overflow: hidden;
+        }
+
+        .export-dropdown-menu.show {
+            display: flex;
+        }
+
+        .export-option {
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            text-align: left;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .export-option:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        /* Carousel Page Indicator dot group */
+        .carousel-indicator {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .carousel-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: var(--border-color);
+            cursor: pointer;
+        }
+
+        .carousel-dot.active {
+            background-color: var(--accent-color);
+        }
+
+        /* === OUTRAS TELAS === */
+        /* Split container Templates */
+        .split-container {
+            display: flex;
+            height: calc(100vh - 86px);
+            margin: -16px;
+        }
+
+        .split-left {
+            width: 320px;
+            background-color: var(--bg-surface);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .split-right {
+            flex: 1;
+            background-color: var(--bg-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .template-preview-card {
+            width: 360px;
+            height: 360px;
+            background-color: #ffffff;
+            color: #1a1a1a;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            border-radius: 2px;
+            overflow: hidden;
+            transition: all 0.2s ease-out;
+        }
+
+        .preview-header-img {
+            flex: 1;
+            background-color: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .preview-header-img svg {
+            width: 80px;
+            height: 80px;
+            color: #d1d5db;
+        }
+
+        .preview-content {
+            padding: 16px;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .preview-tag {
+            font-size: 9px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #2563eb;
+            letter-spacing: 0.5px;
+        }
+
+        .preview-title {
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.2;
+            color: #111827;
+        }
+
+        .preview-price {
+            font-size: 20px;
+            font-weight: 800;
+            color: #10b981;
+            margin-top: 4px;
+        }
+
+        .preview-footer {
+            font-size: 10px;
+            color: #6b7280;
+            border-top: 1px solid #f3f4f6;
+            padding-top: 8px;
+            margin-top: 4px;
+        }
+
+        /* Biblioteca de Arquivos Gerados (Outputs) */
+        .output-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .file-card {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .file-card-preview {
+            height: 140px;
+            background-color: var(--bg-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .file-card-preview svg {
+            width: 48px;
+            height: 48px;
+            color: var(--text-secondary);
+        }
+
+        .file-card-details {
+            padding: 12px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .file-card-name {
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-card-meta {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .file-card-actions {
+            margin-top: 8px;
+            display: flex;
+            gap: 4px;
+        }
+
+        /* === STATUS BAR & TOAST === */
+        .status-bar {
+            height: 24px;
+            background-color: var(--bg-sidebar);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .status-left, .status-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-item svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        .toast-notification {
+            position: fixed;
+            bottom: 36px;
+            right: 16px;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-left: 3px solid var(--accent-color);
+            padding: 12px 16px;
+            border-radius: 2px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transform: translateY(150%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .toast-notification.show {
+            transform: translateY(0);
+        }
+
+        .toast-notification.success {
+            border-left-color: var(--color-success);
+        }
+
+        .toast-notification.error {
+            border-left-color: var(--color-error);
+        }
+
+        /* === CODE EDITOR (VS CODE STYLE) === */
+        .code-editor {
+            display: flex;
+            flex-direction: column;
+            background-color: #1e1e1e;
+            border-right: 1px solid var(--border-color);
+            height: 100%;
+        }
+        .editor-tabs {
+            display: flex;
+            background-color: #181818;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .editor-tab {
+            padding: 8px 16px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            background-color: #181818;
+            border: none;
+            border-right: 1px solid var(--border-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: inherit;
+        }
+        .editor-tab:hover {
+            color: var(--text-primary);
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+        .editor-tab.active {
+            background-color: #1e1e1e;
+            color: var(--text-primary);
+            border-top: 2px solid var(--accent-color);
+        }
+        .editor-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        .editor-lines {
+            width: 32px;
+            background-color: #1e1e1e;
+            border-right: 1px solid #2d2d2d;
+            color: #858585;
+            text-align: right;
+            padding: 8px 6px 0 0;
+            font-size: 11px;
+            line-height: 1.6;
+            user-select: none;
+            font-family: 'Consolas', 'Fira Code', 'Courier New', monospace;
+        }
+        .editor-textarea {
+            flex: 1;
+            background-color: #1e1e1e;
+            color: #9cdcfe;
+            border: none;
+            resize: none;
+            padding: 8px;
+            font-family: 'Consolas', 'Fira Code', 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            outline: none;
+            overflow-y: auto;
+        }
+
+        /* === PROGRESS BAR & MAPPING STYLES === */
+        .progress-container {
+            width: 100%;
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            padding: 8px;
+        }
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background-color: #111114;
+            border-radius: 1px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            width: 0%;
+            height: 100%;
+            background-color: var(--accent-color);
+            transition: width 0.1s ease-out;
+        }
+        .progress-text {
+            font-size: 11px;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+        }
+        .mapping-row {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .mapping-badge {
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--color-success);
+            background-color: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            padding: 1px 4px;
+            border-radius: 2px;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        /* === TOGGLE SWITCH === */
+        .switch-container {
+            position: relative;
+            display: inline-block;
+            width: 32px;
+            height: 18px;
+        }
+        .switch-container input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border-color);
+            transition: .2s;
+            border-radius: 9px;
+        }
+        .switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 12px;
+            width: 12px;
+            left: 3px;
+            bottom: 3px;
+            background-color: var(--text-primary);
+            transition: .2s;
+            border-radius: 50%;
+        }
+        input:checked + .switch-slider {
+            background-color: var(--accent-color);
+        }
+        input:checked + .switch-slider:before {
+            transform: translateX(14px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- 1. BARRA DE ATIVIDADES (Activity Bar) -->
+        <div class="activity-bar">
+            <button class="activity-btn active" id="act-btn-dashboard" onclick="switchMainTab('dashboard', this)" title="Monitor de Lote">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h-2a2 2 0 00-2-2z"/></svg>
+            </button>
+            <!-- Templates -->
+            <button class="activity-btn" id="act-btn-templates" onclick="switchMainTab('templates', this)" title="Templates">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
+            </button>
+            <!-- Providers -->
+            <button class="activity-btn" id="act-btn-providers" onclick="switchMainTab('providers', this)" title="Providers de Dados">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
+            </button>
+            <!-- Biblioteca / Gerados (Outputs) -->
+            <button class="activity-btn" id="act-btn-outputs" onclick="switchMainTab('outputs', this)" title="Arquivos Gerados">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5M5 19a2 2 0 002 2h12a2 2 0 002-2v-5M17 14l2-2m0 0l2 2m-2-2v6"/></svg>
+            </button>
+            <!-- Settings -->
+            <button class="activity-btn" id="act-btn-settings" onclick="switchMainTab('settings', this)" title="Configurações">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </button>
+        </div>
+ 
+        <!-- 2. CONTEXT EXPLORER (Coluna do Meio - Monitor de Lote) -->
+        <div class="context-explorer" id="sidebar-dashboard">
+            <div class="explorer-header">Monitor de Lote</div>
+            <div class="explorer-section">
+                <div class="explorer-section-title">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    JOB PROFILES ATIVOS
+                </div>
+                <ul class="explorer-list" id="job-profiles-list">
+                    <!-- Preenchido dinamicamente via JS -->
+                </ul>
+            </div>
+        </div>
+
+        <div class="context-explorer" id="sidebar-templates" style="display:none;">
+            <div class="explorer-header">Explorer de Templates</div>
+            
+            <div class="explorer-section">
+                <div class="explorer-section-title">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                    CARROSSEL DE FOTOS
+                </div>
+                <ul class="explorer-list">
+                    <li class="explorer-item active" onclick="selectTemplate('banner-produto')">
+                        <div class="explorer-item-header">banner-produto.html</div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="explorer-section" style="border-top: 1px solid var(--border-color); padding-top: 8px; margin-top: 8px;">
+                <div class="explorer-section-title">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                    VÍDEOS CURTOS
+                </div>
+                <ul class="explorer-list">
+                    <li class="explorer-item" onclick="selectTemplate('social-post-instagram')">
+                        <div class="explorer-item-header">social-post-instagram.html</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="context-explorer" id="sidebar-providers" style="display:none;">
+            <div class="explorer-header">Explorer de Providers</div>
+            <div class="explorer-section">
+                <div class="explorer-section-title">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4"/></svg>
+                    FONTES CONECTADAS
+                </div>
+                <ul class="explorer-list">
+                    <li class="explorer-item active" onclick="selectProvider('ERP_System')">
+                        <div class="explorer-item-header">ERP_System (SQL Server)</div>
+                    </li>
+                    <li class="explorer-item" onclick="selectProvider('CSV_Import')">
+                        <div class="explorer-item-header">CSV_Import (Local File)</div>
+                    </li>
+                    <li class="explorer-item" onclick="selectProvider('REST_API_Client')">
+                        <div class="explorer-item-header">REST_API_Client (API)</div>
+                    </li>
+                    <li class="explorer-item" onclick="selectProvider('Promo_Alert_Bot')">
+                        <div class="explorer-item-header">Promo_Alert_Bot (Crawler)</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="context-explorer" id="sidebar-outputs" style="display:none;">
+            <div class="explorer-header">Arquivos de Saída</div>
+            <div class="explorer-section">
+                <div class="explorer-section-title">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"/></svg>
+                    OUTPUT DIRECTORY
+                </div>
+                <ul class="explorer-list">
+                    <li class="explorer-item active" onclick="filterGeneratedFiles('all')">
+                        <div class="explorer-item-header">Todos os Arquivos</div>
+                    </li>
+                    <li class="explorer-item" onclick="filterGeneratedFiles('png')">
+                        <div class="explorer-item-header">Imagens (.png)</div>
+                    </li>
+                    <li class="explorer-item" onclick="filterGeneratedFiles('html')">
+                        <div class="explorer-item-header">Websites (.html)</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="context-explorer" id="sidebar-settings" style="display:none;">
+            <div class="explorer-header">Opções do Sistema</div>
+            <div class="explorer-section">
+                <ul class="explorer-list">
+                    <li class="explorer-item active">
+                        <div class="explorer-item-header">Preferências Gerais</div>
+                    </li>
+                    <li class="explorer-item">
+                        <div class="explorer-item-header">Atalhos do Teclado</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 3. ÁREA DE TRABALHO PRINCIPAL (Workspace de 3 Colunas Integrado) -->
+        <div class="main-workspace">
+            <!-- Header do Workspace -->
+            <div class="workspace-header">
+                <div class="breadcrumbs" id="workspace-breadcrumbs">
+                    <span>rznd-media</span> &gt; <span class="active">aprovação</span>
+                </div>
+                <div>
+                    <button class="btn btn-sm" onclick="toggleTheme()" id="theme-btn">Tema Claro</button>
+                </div>
+            </div>
+
+            <!-- 1. WORKSPACE MONITOR DE LOTE (RUNTIME BATCH MONITOR - 3 COLUNAS) -->
+            <div class="workspace-content active" id="content-dashboard" style="padding: 0;">
+                <div style="display: flex; height: calc(100vh - 59px); overflow: hidden;">
+                    
+                    <!-- COLUNA 1: CONFIGURAÇÃO / JOB PROFILE -->
+                    <div style="width: 360px; padding: 14px; border-right: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 12px; overflow-y: auto; background-color: var(--bg-surface);">
+                        <div class="panel-title" style="margin-bottom:0; font-size:12px; justify-content:space-between;">
+                            <span>JOB CONFIGURATION</span>
+                            <span class="explorer-item-badge info" style="font-size:9px;">Profile Editor</span>
+                        </div>
+
+                        <!-- Seletor de Banco/Provider -->
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Fonte de Dados (Database/Bot)</label>
+                            <select class="form-input" id="job-provider-select" onchange="switchJobProvider()">
+                                <option value="ERP_System">ERP_System (Banco Local SQLite)</option>
+                                <option value="CSV_Import">CSV_Import (CSV de Ofertas)</option>
+                                <option value="REST_API_Client">REST_API_Client (API)</option>
+                                <option value="Promo_Alert_Bot">Promo_Alert_Bot (Crawler Bot)</option>
+                            </select>
+                        </div>
+
+                        <!-- Seletor de Template -->
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Template de Saída</label>
+                            <select class="form-input" id="job-template-select" onchange="updateJobMapping()">
+                                <option value="banner-produto">banner-produto (Fotos 1:1)</option>
+                                <option value="social-post-instagram">social-post-instagram (Vídeo 9:16)</option>
+                            </select>
+                        </div>
+
+                        <!-- Variáveis Mapping De/Para -->
+                        <div style="border: 1px solid var(--border-color); padding: 8px; border-radius: 2px; background-color: var(--bg-main);">
+                            <div class="form-label" style="font-weight:700; color: var(--text-primary); margin-bottom: 6px; display:flex; justify-content:space-between; align-items:center;">
+                                <span>MAPEAMENTO DE VARIÁVEIS</span>
+                                <span class="mapping-badge">Auto-Map</span>
+                            </div>
+                            <div class="mapping-row" style="margin-bottom:6px;">
+                                <span class="form-label" style="margin:0; font-size:10px;">{{Name}}:</span>
+                                <select class="form-input" id="job-map-name" style="font-size:11px; padding: 2px;" onchange="updateJobPreview()"></select>
+                            </div>
+                            <div class="mapping-row" style="margin-bottom:6px;">
+                                <span class="form-label" style="margin:0; font-size:10px;">{{Price}}:</span>
+                                <select class="form-input" id="job-map-price" style="font-size:11px; padding: 2px;" onchange="updateJobPreview()"></select>
+                            </div>
+                            <div class="mapping-row" style="margin-bottom:6px;">
+                                <span class="form-label" style="margin:0; font-size:10px;">{{Tag}}:</span>
+                                <select class="form-input" id="job-map-tag" style="font-size:11px; padding: 2px;" onchange="updateJobPreview()"></select>
+                            </div>
+                            <div class="mapping-row" style="margin-bottom:6px;">
+                                <span class="form-label" style="margin:0; font-size:10px;">{{Footer}}:</span>
+                                <select class="form-input" id="job-map-footer" style="font-size:11px; padding: 2px;" onchange="updateJobPreview()"></select>
+                            </div>
+                            <div class="mapping-row" style="margin-bottom:0;">
+                                <span class="form-label" style="margin:0; font-size:10px;">{{Image}}:</span>
+                                <select class="form-input" id="job-map-image" style="font-size:11px; padding: 2px;" onchange="updateJobPreview()"></select>
+                            </div>
+                        </div>
+
+                        <!-- Organização por pastas -->
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Diretório de Saída (Folders)</label>
+                            <select class="form-input" id="job-folder-select">
+                                <option value="eletronicos">/output/produtos-eletronicos/</option>
+                                <option value="academia">/output/produtos-academia/</option>
+                                <option value="geral">/output/geral/</option>
+                            </select>
+                        </div>
+
+                        <!-- Modo Automação Contínua (Runtime Listener) -->
+                        <div style="border: 1px solid var(--border-color); padding: 8px; border-radius: 2px; display:flex; justify-content:space-between; align-items:center; background-color: rgba(37,99,235,0.02);">
+                            <div>
+                                <span class="form-label" style="font-weight:700; color:var(--text-primary); margin:0;">Automação Contínua</span>
+                                <p style="font-size:9px; color:var(--text-secondary); margin: 2px 0 0 0;">Gera posts sempre que houver novos dados via Bots ou CSV.</p>
+                            </div>
+                            <label class="switch-container">
+                                <input type="checkbox" id="job-automation-switch" onchange="toggleContinuousAutomationSim()">
+                                <span class="switch-slider"></span>
+                            </label>
+                        </div>
+
+                        <div style="margin-top: auto; display:flex; gap: 8px;">
+                            <button class="btn btn-sm" style="flex:1; justify-content:center;" onclick="saveJobProfileSim()">
+                                Salvar Job Profile
+                            </button>
+                            <button class="btn btn-sm" onclick="toggleDebugManualDrawer()" style="background-color: var(--bg-main); border-color: var(--border-color);" title="Debug Template">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                            </button>
+                        </div>
+
+                        <!-- Debug Manual Template (Ocultável) -->
+                        <div id="debug-manual-drawer" style="display:none; border:1px dashed var(--border-color); padding:8px; border-radius:2px; background-color: rgba(255,255,255,0.01);">
+                            <div class="form-label" style="margin-bottom: 4px; font-weight:700; color: var(--text-primary);">DEBUG/TEMPLATE TEST (MANUAL)</div>
+                            <input class="form-input" type="text" id="dbg-title" value="Debug Tênis Fera" placeholder="Name" style="font-size:11px; margin-bottom: 4px; height:24px;">
+                            <input class="form-input" type="text" id="dbg-price" value="199,90" placeholder="Price" style="font-size:11px; margin-bottom: 4px; height:24px;">
+                            <button class="btn btn-primary btn-sm" style="width:100%; justify-content:center; font-size:10px; padding: 2px;" onclick="runDebugPreviewSim()">Testar Render</button>
+                        </div>
+                    </div>
+
+                    <!-- COLUNA 2: EXECUÇÃO / CONSOLE RUNTIME -->
+                    <div style="flex: 1; padding: 14px; border-right: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 14px; background-color: var(--bg-main);">
+                        <div class="panel-title" style="margin-bottom:0; font-size:12px;">
+                            <span>ENGINE RUNTIME (CONSOLE LOGS)</span>
+                            <span class="explorer-item-badge" id="job-runtime-status-badge" style="background-color: var(--bg-surface); color: var(--text-secondary);">STANDBY</span>
+                        </div>
+
+                        <!-- Grande Botão de Executar -->
+                        <div>
+                            <button class="btn btn-primary" id="btn-job-execute" style="width: 100%; justify-content:center; padding:16px; font-size:14px; font-weight:700; background-color: #2563eb;" onclick="runJobBatchSim()">
+                                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="margin-right: 8px;"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                EXECUTAR PROCESSAMENTO EM LOTE (BUILD)
+                            </button>
+
+                            <!-- Barra de progresso -->
+                            <div class="progress-container" id="job-progress-container" style="display:none; margin-top:10px;">
+                                <div class="progress-text">
+                                    <span id="job-progress-status">Iniciando engine .NET Worker...</span>
+                                    <span id="job-progress-percent">0%</span>
+                                </div>
+                                <div class="progress-bar-bg">
+                                    <div class="progress-bar-fill" id="job-progress-bar"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Console Terminal logs -->
+                        <div style="flex:1; display:flex; flex-direction:column; border:1px solid var(--border-color); border-radius:2px; overflow:hidden; background-color:#0d0d0f;">
+                            <div style="background-color:#141416; padding: 6px 10px; border-bottom:1px solid var(--border-color); font-size:10px; color:var(--text-secondary); display:flex; justify-content:space-between; align-items:center;">
+                                <span>Output Console (.NET Core Worker Services)</span>
+                                <button class="btn btn-sm" style="font-size:9px; padding:2px 6px;" onclick="clearJobConsoleSim()">Limpar</button>
+                            </div>
+                            <div id="job-console-logs" style="flex:1; padding:10px; font-family:'Consolas', 'Fira Code', monospace; font-size:11px; line-height:1.5; color:#a6accd; overflow-y:auto; word-break:break-all;">
+                                <span style="color:#5c6370;">[SYSTEM] Standby. Configure o Job Profile na esquerda e clique em Executar para iniciar o build das mídias.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- COLUNA 3: RESULTADOS / OUTPUT GRID -->
+                    <div style="width: 440px; padding: 14px; display: flex; flex-direction: column; gap: 14px; background-color: var(--bg-surface);">
+                        <div class="panel-title" style="margin-bottom:0; font-size:12px;">
+                            <span>RESULTADOS DA EXECUÇÃO</span>
+                            <span class="explorer-item-badge success" id="job-results-count">0 itens</span>
+                        </div>
+
+                        <!-- Filtros de resultados -->
+                        <div class="segmented-control" id="job-result-filter" style="margin: 0;">
+                            <button class="segment-btn active" id="btn-filter-all" onclick="filterJobResults('all')">Todos</button>
+                            <button class="segment-btn" id="btn-filter-success" onclick="filterJobResults('success')">Sucesso</button>
+                            <button class="segment-btn" id="btn-filter-error" onclick="filterJobResults('error')">Com Erro</button>
+                        </div>
+
+                        <!-- Lista de Resultados -->
+                        <div style="flex:1; overflow-y:auto; border:1px solid var(--border-color); border-radius:2px; background-color:var(--bg-main);">
+                            <div style="display:flex; flex-direction:column;" id="job-results-list-container">
+                                <!-- Preenchido dinamicamente via JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- 2. ABA TEMPLATES (CONGRESSO DE ESCALA / CONTROL CENTER - POWER USER) -->
+            <div class="workspace-content" id="content-templates" style="padding: 0;">
+                <div class="split-container" style="height: calc(100vh - 59px);">
+                    
+                    <!-- 1. PAINEL ESQUERDO: DATA & MAPPING -->
+                    <div class="split-left" style="width: 520px; padding: 14px; display: flex; flex-direction: column; gap: 14px; border-right: 1px solid var(--border-color); overflow-y: auto;">
+                        <div class="panel-title" style="margin-bottom:0; font-size:13px; justify-content:space-between;">
+                            <span>CONEXÃO DE DADOS & ESCALA</span>
+                            <span class="explorer-item-badge success">Power User</span>
+                        </div>
+                        
+                        <!-- Abas de Entrada: Manual vs Escala -->
+                        <div class="segmented-control" id="input-mode-select" style="margin: 0;">
+                            <button class="segment-btn active" id="btn-mode-manual" onclick="setTemplateInputMode('manual')">Edição Manual</button>
+                            <button class="segment-btn" id="btn-mode-scale" onclick="setTemplateInputMode('scale')">Conexão de Dados (Escala)</button>
+                        </div>
+
+                        <!-- CONTAINER MODO 1: MANUAL FORM -->
+                        <div id="input-container-manual" style="display: flex; flex-direction: column; gap: 10px;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label" for="t-title">Product.Name (Título)</label>
+                                <input class="form-input" type="text" id="t-title" value="Camisa Polo Classic Blue" oninput="updateTemplatePreview()">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label" for="t-price">Product.Price (Preço R$)</label>
+                                <input class="form-input" type="text" id="t-price" value="89,90" oninput="updateTemplatePreview()">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label" for="t-category">Product.Tag (Tag / Campanha)</label>
+                                <input class="form-input" type="text" id="t-category" value="COLEÇÃO OUTONO" oninput="updateTemplatePreview()">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label" for="t-footer">Product.Footer (Rodapé)</label>
+                                <input class="form-input" type="text" id="t-footer" value="*Promoção por tempo limitado." oninput="updateTemplatePreview()">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label">Product.Image (Foto do Produto)</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <input class="form-input" type="text" id="t-image" value="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=300" oninput="updateTemplatePreview()" placeholder="URL ou caminho local da foto..." style="flex: 1;">
+                                    <button class="btn btn-sm" onclick="simulateProductPhotoUpload()" style="padding: 4px 8px; font-size:11px;">Upload</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CONTAINER MODO 2: BATCH DATA & MAPPING -->
+                        <div id="input-container-scale" style="display: none; flex-direction: column; gap: 12px;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label class="form-label">Selecionar Provider (Fonte Externa)</label>
+                                <select class="form-input" id="scale-provider-select" onchange="switchScaleProvider()">
+                                    <option value="ERP_System">ERP_System (SQL Server)</option>
+                                    <option value="CSV_Import">CSV_Import (CSV de Ofertas)</option>
+                                    <option value="REST_API_Client">REST_API_Client (API Integration)</option>
+                                    <option value="Promo_Alert_Bot">Promo_Alert_Bot (Crawler Bot)</option>
+                                </select>
+                            </div>
+
+                            <!-- Mapeamento de Variáveis De/Para -->
+                            <div style="border: 1px solid var(--border-color); padding: 10px; border-radius: 2px; background-color: rgba(255,255,255,0.01);">
+                                <div class="form-label" style="margin-bottom: 8px; font-weight:700; color: var(--text-primary); display:flex; justify-content:space-between; align-items:center;">
+                                    <span>MAPEAR CAMPOS DA TABELA</span>
+                                    <span class="mapping-badge" id="auto-map-indicator">
+                                        <svg width="8" height="8" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                        Auto-conectado
+                                    </span>
+                                </div>
+                                
+                                <div class="mapping-row">
+                                    <span class="form-label" style="margin:0;">{{Product.Name}} recebe:</span>
+                                    <select class="form-input" id="map-name" onchange="updateBatchMapping()"></select>
+                                </div>
+                                <div class="mapping-row">
+                                    <span class="form-label" style="margin:0;">{{Product.Price}} recebe:</span>
+                                    <select class="form-input" id="map-price" onchange="updateBatchMapping()"></select>
+                                </div>
+                                <div class="mapping-row">
+                                    <span class="form-label" style="margin:0;">{{Product.Tag}} recebe:</span>
+                                    <select class="form-input" id="map-tag" onchange="updateBatchMapping()"></select>
+                                </div>
+                                <div class="mapping-row">
+                                    <span class="form-label" style="margin:0;">{{Product.Footer}} recebe:</span>
+                                    <select class="form-input" id="map-footer" onchange="updateBatchMapping()"></select>
+                                </div>
+                                <div class="mapping-row">
+                                    <span class="form-label" style="margin:0;">{{Product.Image}} recebe:</span>
+                                    <select class="form-input" id="map-image" onchange="updateBatchMapping()"></select>
+                                </div>
+                            </div>
+
+                            <!-- Pré-visualização de Dados (Lote) -->
+                            <div>
+                                <span class="form-label" style="margin-bottom:4px;">PRÉ-VISUALIZAÇÃO DE REGISTROS DE LOTE (MAPPED RENDER)</span>
+                                <table class="data-table" style="font-size:11px; margin:0;" id="scale-preview-table">
+                                    <thead>
+                                        <tr id="scale-preview-thead">
+                                            <!-- Preenchido via JS -->
+                                        </tr>
+                                    </thead>
+                                    <tbody id="scale-preview-tbody">
+                                        <!-- Preenchido via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Configurações do Catálogo HTML (Estilo Shopee) -->
+                            <div style="border: 1px solid var(--border-color); padding: 10px; border-radius: 2px; background-color: rgba(255,255,255,0.01); display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+                                <div class="form-label" style="font-weight:700; color: var(--text-primary); margin:0;">CONFIGURAR CATÁLOGO HTML COMPLETO</div>
+                                <div class="form-group" style="margin: 0;">
+                                    <label class="form-label">Link de Redirecionamento (WhatsApp/Checkout)</label>
+                                    <input class="form-input" type="text" id="catalog-redirect-url" value="https://wa.me/55999999999?text=Olá,+gostei+da+">
+                                </div>
+                                <div class="form-group" style="margin: 0;">
+                                    <label class="form-label">Estrutura de Pastas e Agrupamento</label>
+                                    <select class="form-input" id="catalog-folders-group">
+                                        <option value="category">Agrupar pastas por Categoria/Tag</option>
+                                        <option value="flat">Pasta única de Produtos (Estrutura Flat)</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-sm btn-primary" style="margin-top: 4px; justify-content:center; padding: 6px;" onclick="triggerExportCatalogHTMLSim()">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2-8H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7.414A1 1 0 0018.707 6.707l-3.414-3.414A1 1 0 0014.586 3H7z"/></svg>
+                                    Gerar & Exportar Catálogo HTML
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Executador de Lote -->
+                        <div style="border-top:1px solid var(--border-color); padding-top: 12px; margin-top: auto;">
+                            <button class="btn btn-primary" id="btn-execute-batch" style="width: 100%; justify-content:center; padding:10px; font-weight:700;" onclick="triggerBatchRenderSim()">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                EXECUTAR LOTE COMPLETO
+                            </button>
+                            
+                            <!-- Barra de progresso do processamento -->
+                            <div class="progress-container" id="batch-progress-container">
+                                <div class="progress-text">
+                                    <span id="batch-progress-status">Preparando motor...</span>
+                                    <span id="batch-progress-percent">0%</span>
+                                </div>
+                                <div class="progress-bar-bg">
+                                    <div class="progress-bar-fill" id="batch-progress-bar"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. PAINEL DIREITO: LIVE PREVIEW & ENGINE -->
+                    <div class="split-right" style="flex: 1; display: flex; flex-direction: column; overflow: hidden; background-color: var(--bg-main);">
+                        <!-- Barra de Ferramentas Superior do Painel Direito -->
+                        <div class="workspace-header" style="height:35px; border-bottom:1px solid var(--border-color); padding: 0 12px;">
+                            <div class="breadcrumbs" id="scale-breadcrumbs">
+                                <span>templates</span> &gt; <span>banner-produto</span> &gt; <span class="active" id="scale-connected-provider-name">[ERP_System]</span>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-primary" style="background-color: var(--bg-surface); color: var(--text-primary); border-color: var(--border-color);" onclick="toggleCodeEditor()">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right: 4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                                    Editar Template (Código)
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Sub-Layout Dividido Internamente para Código e Preview Lado a Lado -->
+                        <div style="flex: 1; display: flex; overflow: hidden;">
+                            <!-- Editor Monaco Embutido (Ocultável) -->
+                            <div id="split-code-editor" style="width: 380px; height: 100%; border-right: 1px solid var(--border-color); display: none; flex-direction: column;">
+                                <div class="editor-tabs">
+                                    <button class="editor-tab active" id="editor-tab-html" onclick="switchEditorTab('html')">index.html</button>
+                                    <button class="editor-tab" id="editor-tab-css" onclick="switchEditorTab('css')">styles.css</button>
+                                </div>
+                                <div class="editor-body">
+                                    <textarea class="editor-textarea" id="template-code-area" oninput="updateTemplatePreviewFromCode()"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Live Render Viewport -->
+                            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; overflow-y: auto;">
+                                <div class="form-label" style="margin-bottom: 12px; font-weight:700;">LIVE RENDERING VIEWPORT</div>
+                                <div class="template-preview-card" id="template-card-preview">
+                                    <div class="preview-header-img" id="template-card-preview-media">
+                                        <img id="preview-image-el" src="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=300" style="width: 100%; height: 100%; object-fit: cover;" alt="Foto do Produto">
+                                    </div>
+                                    <div class="preview-content">
+                                        <div class="preview-tag" id="preview-tag-el">TAG</div>
+                                        <div class="preview-title" id="preview-title-el">Nome do Produto</div>
+                                        <div class="preview-price" id="preview-price-el">R$ 0,00</div>
+                                        <div class="preview-footer" id="preview-footer-el">Rodapé</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Motor de Mídia Headless Viewport Control (Rodapé do Preview) -->
+                        <div class="ui-panel" style="border: none; border-top:1px solid var(--border-color); background-color: var(--bg-surface); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;">
+                            <div>
+                                <label class="form-label" style="margin-bottom: 2px;">Proporção do Viewport (Headless)</label>
+                                <div class="segmented-control" id="template-destination-select" style="margin: 0; width: 320px;">
+                                    <button class="segment-btn active" onclick="setTemplateDestination('local', this)">Disco (1:1)</button>
+                                    <button class="segment-btn" onclick="setTemplateDestination('instagram', this)">Instagram (1:1)</button>
+                                    <button class="segment-btn" onclick="setTemplateDestination('telegram', this)">Telegram (16:9)</button>
+                                    <button class="segment-btn" onclick="setTemplateDestination('tiktok', this)">TikTok (9:16)</button>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-sm" onclick="triggerTemplateRenderTest('png')">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a1 1 0 011.414 0L16 17m0 0l1.586-1.586a1 1 0 011.414 0L21 18M9 11h.01M20 12a8 8 0 11-16 0 8 8 0 0116 0z"/></svg>
+                                    Capturar PNG
+                                </button>
+                                <button class="btn btn-sm" onclick="triggerTemplateRenderTest('mp4')">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                    Gravar MP4 (Vídeo)
+                                </button>
+
+                                <!-- Dropdown de Lote completo -->
+                                <div class="export-dropdown-container">
+                                    <button class="btn btn-primary btn-sm" onclick="toggleBatchExportDropdown()">
+                                        Exportar Lote
+                                        <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-left: 2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                                    </button>
+                                    <div class="export-dropdown-menu" id="batch-export-menu" style="bottom: 100%; top: auto; margin-bottom: 4px;">
+                                        <button class="export-option" onclick="selectBatchExportAction('local')">Salvar Pacote Local</button>
+                                        <button class="export-option" onclick="selectBatchExportAction('telegram')">Enviar Lote Telegram</button>
+                                        <button class="export-option" onclick="selectBatchExportAction('instagram')">Agendar Instagram</button>
+                                        <button class="export-option" onclick="triggerExportCatalogHTMLSim()">Exportar Catálogo HTML</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. ABA PROVIDERS -->
+            <div class="workspace-content" id="content-providers">
+                <!-- SQL DATABASE CRUD -->
+                <div class="provider-detail-container" id="provider-view-sql">
+                    <div class="provider-meta">
+                        <div>
+                            <h2>ERP_System</h2>
+                            <div class="form-label" style="margin-top:4px;">PROVEDOR SQL SERVER CONECTADO</div>
+                        </div>
+                        <div class="provider-status-badge active">
+                            <span class="status-dot success"></span> Conexão Ativa
+                        </div>
+                    </div>
+
+                    <div class="ui-panel" style="margin-bottom: 8px;">
+                        <div class="panel-title">Parâmetros de Conectividade</div>
+                        <div style="display:flex; gap:16px; align-items:center;">
+                            <div style="flex:1;">
+                                <label class="form-label">ConnectionString de Banco SQL</label>
+                                <input class="form-input" type="text" value="sqlserver://localhost:1433;database=rznd_db;user=sa;password=********" readonly>
+                            </div>
+                            <button class="btn" onclick="testConnectionSim('ERP_System')">Testar Conexão</button>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 16px; align-items: flex-start;">
+                        <div class="ui-panel" style="flex: 2;">
+                            <div class="panel-title">Produtos Encontrados na Tabela [produtos]</div>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nome do Produto</th>
+                                        <th>SKU</th>
+                                        <th>Preço</th>
+                                        <th style="width: 120px;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sql-products-tbody">
+                                    <!-- Preenchido via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="ui-panel" style="flex: 1;">
+                            <div class="panel-title" id="crud-form-title">Adicionar Produto</div>
+                            <input type="hidden" id="crud-p-id">
+                            
+                            <div class="form-group">
+                                <label class="form-label">Nome do Produto</label>
+                                <input class="form-input" type="text" id="crud-p-name" placeholder="ex: Calça Jeans Slim">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">SKU</label>
+                                <input class="form-input" type="text" id="crud-p-sku" placeholder="ex: CALCA-JEANS-01">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Preço (R$)</label>
+                                <input class="form-input" type="text" id="crud-p-price" placeholder="ex: 129,90">
+                            </div>
+
+                            <div style="display:flex; gap:8px; margin-top:16px;">
+                                <button class="btn btn-primary" onclick="saveCrudProduct()">Salvar</button>
+                                <button class="btn" onclick="clearCrudForm()">Limpar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LOCAL FILES REDIRECTION -->
+                <div class="provider-detail-container" id="provider-view-file" style="display: none;">
+                    <div class="provider-meta">
+                        <div>
+                            <h2>CSV_Import</h2>
+                            <div class="form-label" style="margin-top:4px;">PROVEDOR DE ARQUIVO LOCAL DETECTADO</div>
+                        </div>
+                        <div class="provider-status-badge active" style="color:var(--color-warning); border-color:var(--color-warning);">
+                            <span class="status-dot warning"></span> Arquivo Vinculado (Somente Leitura)
+                        </div>
+                    </div>
+
+                    <div class="ui-panel">
+                        <div class="panel-title">Configurações e Acesso Local</div>
+                        <div style="display:flex; gap:16px; align-items:center;">
+                            <div style="flex:1;">
+                                <label class="form-label">Caminho do Arquivo Local no Sistema Operacional</label>
+                                <input class="form-input" type="text" value="C:/Planilhas/produtos_campanha.csv" readonly>
+                            </div>
+                            <button class="btn btn-primary" onclick="simulateOpenFileInOS()">Abrir Arquivo no Sistema (OS)</button>
+                        </div>
+                        <p style="margin-top: 10px; font-size:11px; color: var(--text-secondary);">
+                            Como este provedor utiliza um arquivo local, a edição direta de registros é protegida. Use o botão acima para abrir e editar o arquivo no seu editor de planilhas nativo (Excel, LibreOffice) e o RZND Media lerá os novos dados automaticamente.
+                        </p>
+                    </div>
+
+                    <div class="ui-panel">
+                        <div class="panel-title">Pré-visualização do Conteúdo (Somente Leitura)</div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Linha</th>
+                                    <th>Nome</th>
+                                    <th>SKU</th>
+                                    <th>Preço</th>
+                                    <th>Categoria</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>Tênis Running Air</td>
+                                    <td>TENIS-RUN-02</td>
+                                    <td>R$ 299,90</td>
+                                    <td>Calçados</td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>Boné Aba Reta Black</td>
+                                    <td>BONE-ABA-04</td>
+                                    <td>R$ 59,90</td>
+                                    <td>Acessórios</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>Mochila Adventure 30L</td>
+                                    <td>MOCH-ADV-01</td>
+                                    <td>R$ 189,90</td>
+                                    <td>Acessórios</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- REST API INTEGRATION -->
+                <div class="provider-detail-container" id="provider-view-api" style="display: none;">
+                    <div class="provider-meta">
+                        <div>
+                            <h2>REST_API_Client</h2>
+                            <div class="form-label" style="margin-top:4px;">INTEGRAÇÃO VIA API HTTP/REST</div>
+                        </div>
+                        <div class="provider-status-badge active">
+                            <span class="status-dot success"></span> Conectado
+                        </div>
+                    </div>
+
+                    <div class="ui-panel" style="margin-bottom: 8px;">
+                        <div class="panel-title">Configurações do Endpoint da API</div>
+                        <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:12px; margin-bottom: 12px;">
+                            <div>
+                                <label class="form-label">URL da API do E-commerce</label>
+                                <input class="form-input" type="text" id="api-endpoint-input" value="https://api.lojaexemplo.com/v1/products">
+                            </div>
+                            <div>
+                                <label class="form-label">Método HTTP</label>
+                                <select class="form-input">
+                                    <option>GET</option>
+                                    <option>POST</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Chave de Autorização (Auth Bearer)</label>
+                                <input class="form-input" type="password" value="bearer-token-98327498">
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="fetchApiProductsSim()">Requisitar Produtos (Fetch)</button>
+                        <button class="btn" onclick="testConnectionSim('REST_API_Client')">Testar Conexão</button>
+                    </div>
+
+                    <div class="ui-panel">
+                        <div class="panel-title">Produtos Retornados pela API (Cache Sincronizado)</div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID API</th>
+                                    <th>Nome</th>
+                                    <th>SKU</th>
+                                    <th>Preço</th>
+                                    <th>Estoque</th>
+                                </tr>
+                            </thead>
+                            <tbody id="api-products-tbody">
+                                <tr>
+                                    <td colspan="5" style="text-align: center; color: var(--text-secondary);">Nenhum produto requisitado ainda. Clique em "Requisitar Produtos".</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- PROMO ALERT BOT -->
+                <div class="provider-detail-container" id="provider-view-bot" style="display: none;">
+                    <div class="provider-meta">
+                        <div>
+                            <h2>Promo_Alert_Bot</h2>
+                            <div class="form-label" style="margin-top:4px;">CRAWLER / BOT DE RASTREAMENTO DE OFERTAS</div>
+                        </div>
+                        <div class="provider-status-badge" id="bot-status-badge">
+                            <span class="status-dot warning" id="bot-status-dot"></span> Inativo
+                        </div>
+                    </div>
+
+                    <div class="ui-panel" style="margin-bottom: 8px;">
+                        <div class="panel-title">Configurações de Rastreamento de Promoções</div>
+                        <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:12px; margin-bottom: 12px;">
+                            <div>
+                                <label class="form-label">Palavra-chave de Busca</label>
+                                <input class="form-input" type="text" id="bot-keyword-input" value="hamburguer gourmet">
+                            </div>
+                            <div>
+                                <label class="form-label">Intervalo de Varredura</label>
+                                <select class="form-input">
+                                    <option>A cada 5 minutos</option>
+                                    <option>A cada 15 minutos</option>
+                                    <option>A cada 1 hora</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label">Plataformas Alvo de Varredura</label>
+                                <select class="form-input">
+                                    <option>Grupos Telegram de Promoção</option>
+                                    <option>E-commerces Parceiros</option>
+                                    <option>Todas as Fontes</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" id="bot-toggle-btn" onclick="togglePromoBotSim()">Iniciar Varredura do Bot</button>
+                    </div>
+
+                    <div class="ui-panel">
+                        <div class="panel-title">Alertas e Ofertas Capturadas pelo Bot</div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Horário</th>
+                                    <th>Origem</th>
+                                    <th>Oferta Encontrada</th>
+                                    <th>Preço Normal</th>
+                                    <th>Preço Alerta</th>
+                                    <th>Desconto</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bot-alerts-tbody">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; color: var(--text-secondary);">Bot inativo. Inicie o Bot para capturar promoções da rede.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. ABA OUTPUTS (GERADOS / GALERIA DE MÍDIAS) -->
+            <div class="workspace-content" id="content-outputs">
+                <div class="provider-meta" style="margin-bottom: 16px;">
+                    <div>
+                        <h2>Biblioteca de Arquivos Gerados</h2>
+                        <div class="form-label" style="margin-top:4px;">DIRETÓRIO ATIVO: C:/REPOS/RZND-MEDIA/OUTPUT</div>
+                    </div>
+                    <button class="btn btn-sm" onclick="clearAllOutputsSim()">Limpar Biblioteca</button>
+                </div>
+
+                <div class="output-grid" id="output-files-grid">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
+
+            <!-- 5. ABA CONFIGURAÇÕES -->
+            <div class="workspace-content" id="content-settings">
+                <div class="ui-panel" style="max-width: 600px;">
+                    <div class="panel-title">Configurações Gerais do Sistema</div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Tema da Interface</label>
+                        <select class="form-input" id="settings-theme-select" onchange="applySelectedTheme()">
+                            <option value="dark">Tema Escuro (Visual Studio Code Dark)</option>
+                            <option value="light">Tema Claro</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Motor de Renderização Headless</label>
+                        <select class="form-input">
+                            <option value="puppeteer">Puppeteer (Integrado / Recomendado)</option>
+                            <option value="playwright">Playwright</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Diretório Padrão de Output de Mídia</label>
+                        <input class="form-input" type="text" value="C:/Repos/rznd-media/output">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Porta do Servidor Local</label>
+                        <input class="form-input" type="number" value="3000">
+                    </div>
+
+                    <div style="margin-top: 24px;">
+                        <button class="btn btn-primary" onclick="showToast('Configurações salvas localmente!', 'success')">Salvar Configurações</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATUS BAR (RODAPÉ) -->
+    <div class="status-bar">
+        <div class="status-left">
+            <div class="status-item">
+                <span class="status-dot success"></span>
+                <span>Porta: 3000</span>
+            </div>
+            <div class="status-item">
+                <span>Motor: Puppeteer</span>
+            </div>
+        </div>
+        <div class="status-right">
+            <!-- Botão para abrir os logs simulados -->
+            <button class="btn btn-sm" style="background:transparent; border:none; padding: 2px 8px; color: var(--text-secondary);" onclick="toggleLogsModalManual()">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3m5 0h-5M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                Console Logs
+            </button>
+            <span>RZND Media v0.1.0 (Offline Mode)</span>
+        </div>
+    </div>
+
+    <!-- CONSOLE LOG MODAL (AUTO-FADE) -->
+    <div class="log-terminal-modal" id="terminal-logs-modal">
+        <div class="terminal-header">
+            <span class="form-label" style="margin: 0; font-weight: 700; color: #fff;">Console de Logs do Servidor</span>
+            <button class="btn btn-sm" style="background:transparent; border:none; color:#9ca3af; font-size:16px;" onclick="hideLogsModal()">&times;</button>
+        </div>
+        <div class="terminal-panel" id="terminal-logs">
+            <!-- Linhas de logs injetadas por JS -->
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div class="toast-notification" id="toast-el">
+        <span id="toast-message">Mensagem do Sistema</span>
+    </div>
+
+    <!-- === INTERAÇÕES JAVASCRIPT MOCK === -->
+    <script>
+        // --- FILA DE APROVAÇÃO (DADOS DO WORKER) ---
+        let approvalQueue = [
+            {
+                id: "post_1",
+                title: "Camisa Polo Classic Blue",
+                price: "89,90",
+                tag: "COLEÇÃO OUTONO",
+                footer: "*Promoção por tempo limitado.",
+                type: "Imagem",
+                isCarousel: false,
+                platform: "Instagram (1:1)",
+                aspectRatio: "1:1",
+                timeGenerated: "Há 5 min",
+                status: "Pendente"
+            },
+            {
+                id: "post_2",
+                title: "Combo Gourmet Cheddar",
+                price: "34,90",
+                tag: "PROMOÇÃO GOURMET",
+                footer: "*Válido apenas para delivery.",
+                type: "Vídeo Curto",
+                isCarousel: false,
+                platform: "TikTok (9:16)",
+                aspectRatio: "9:16",
+                timeGenerated: "Há 12 min",
+                status: "Pendente"
+            },
+            {
+                id: "post_3",
+                title: "Coleção Outono Masculina",
+                price: "129,90",
+                tag: "CAMPANHA CARROSSEL",
+                footer: "*Enquanto durarem os estoques.",
+                type: "Carrossel (3 páginas)",
+                isCarousel: true,
+                carouselPages: [
+                    { title: "Jaqueta de Couro Biker", price: "349,90", tag: "CAMPANHA CARROSSEL - PÁG 1" },
+                    { title: "Calça Jeans Slim Fit", price: "129,90", tag: "CAMPANHA CARROSSEL - PÁG 2" },
+                    { title: "Camisa Polo Classic Blue", price: "89,90", tag: "CAMPANHA CARROSSEL - PÁG 3" }
+                ],
+                currentCarouselPageIndex: 0,
+                platform: "Instagram (1:1)",
+                aspectRatio: "1:1",
+                timeGenerated: "Há 18 min",
+                status: "Pendente"
+            }
+        ];
+
+        let activePostIndex = 0;
+
+        // --- ESTADOS DO MONITOR DE LOTE (BATCH RUNTIME) ---
+        let currentJobFilter = "all";
+        let activeJobProfileId = "Lote_Eletronicos_SQL";
+        let isJobRunning = false;
+        let isContinuousAutomationActive = false;
+
+        let jobProfiles = [
+            { id: "Lote_Eletronicos_SQL", name: "Lote_Eletronicos_SQL", provider: "REST_API_Client", template: "banner-produto", folder: "eletronicos" },
+            { id: "Lote_Academia_Bot", name: "Lote_Academia_Bot", provider: "Promo_Alert_Bot", template: "social-post-instagram", folder: "academia" },
+            { id: "CSV_Ofertas_Flat", name: "CSV_Ofertas_Flat", provider: "CSV_Import", template: "banner-produto", folder: "geral" }
+        ];
+
+        let jobResults = [
+            { id: 1, name: "out_batch_1.png", status: "success", message: "Renderizado com sucesso via Puppeteer", path: "C:/Repos/rznd-media/output/produtos-eletronicos/out_batch_1.png", title: "Notebook Core i7 Pro", price: "4.899,00", tag: "PRODUTOS TI" },
+            { id: 2, name: "out_batch_2.png", status: "error", message: "Erro: Conexão recusada ao buscar imagem do produto (HTTP 404)", path: "C:/Repos/rznd-media/output/produtos-eletronicos/out_batch_2.png", title: "Monitor UltraWide 29'", price: "1.299,00", tag: "PRODUTOS TI" },
+            { id: 3, name: "out_batch_3.png", status: "success", message: "Renderizado com sucesso via Puppeteer", path: "C:/Repos/rznd-media/output/produtos-eletronicos/out_batch_3.png", title: "Camisa Polo Classic Blue", price: "89,90", tag: "CAMPANHA VESTUÁRIO" },
+            { id: 4, name: "out_batch_4.png", status: "error", message: "Erro: Valor de preço nulo ou fora dos limites do layout", path: "C:/Repos/rznd-media/output/produtos-eletronicos/out_batch_4.png", title: "Calça Jeans Slim Fit", price: "129,90", tag: "CAMPANHA VESTUÁRIO" }
+        ];
+
+        // --- OUTROS ESTADOS GLOBAIS MOCK ---
+        let mockProducts = [
+            { id: 1, name: "Camisa Polo Classic Blue", sku: "POLO-BL-01", price: "89,90" },
+            { id: 2, name: "Calça Jeans Slim Fit", sku: "JEANS-SL-02", price: "129,90" },
+            { id: 3, name: "Jaqueta de Couro Biker", sku: "JAQ-CO-05", price: "349,90" }
+        ];
+
+        let mockApiProducts = [
+            { id: "api_1", name: "Notebook Core i7 Pro", sku: "NOTE-I7-16G", price: "4.899,00", stock: 12 },
+            { id: "api_2", name: "Monitor UltraWide 29'", sku: "MON-UW-29", price: "1.299,00", stock: 8 }
+        ];
+
+        let mockCrawledPromos = [
+            { time: "14:15:32", source: "Telegram Grupo Promo", name: "Hamburguer Blend 200g (Compre 1 Leve 2)", normalPrice: "38,00", alertPrice: "19,00", discount: "50%" },
+            { time: "14:22:10", source: "E-commerce Parceiro", name: "Hamburguer Gourmet Cheddar Bacon + Batata", normalPrice: "45,00", alertPrice: "29,90", discount: "33%" }
+        ];
+
+        let mockGeneratedFiles = [
+            { id: 1, name: "banner_camisa_polo.png", size: "142 KB", path: "C:/Repos/rznd-media/output/banner_camisa_polo.png", title: "Camisa Polo Classic Blue", price: "89,90", tag: "COLEÇÃO OUTONO", footer: "*Promoção por tempo limitado." }
+        ];
+
+        let activeTemplateFormat = "png";
+        let activeTemplateDestination = "local";
+
+        let activeTemplateTab = "html";
+        let currentTemplateId = "banner-produto";
+        let templatesCode = {
+            'banner-produto': {
+                html: `<!-- banner-produto index.html -->\n<div class="template-card">\n  <div class="header-img">\n    <svg fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a1 1 0 011.414 0L16 17m0 0l1.586-1.586a1 1 0 011.414 0L21 18M9 11h.01M20 12a8 8 0 11-16 0 8 8 0 0116 0z"/></svg>\n  </div>\n  <div class="content">\n    <div class="tag">{{Product.Tag}}</div>\n    <h1 class="title">{{Product.Name}}</h1>\n    <div class="price">R$ {{Product.Price}}</div>\n    <p class="footer">{{Product.Footer}}</p>\n  </div>\n</div>`,
+                css: `/* banner-produto styles.css */\n.template-card {\n  width: 100%;\n  height: 100%;\n  background-color: #ffffff;\n  color: #111827;\n  display: flex;\n  flex-direction: column;\n}\n.tag {\n  color: #2563eb;\n  font-weight: 700;\n}\n.price {\n  color: #10b981;\n  font-weight: 800;\n}`
+            },
+            'social-post-instagram': {
+                html: `<!-- social-post-instagram index.html -->\n<div class="instagram-post">\n  <div class="badge">{{Product.Tag}}</div>\n  <h2 class="title">{{Product.Name}}</h2>\n  <div class="price-bubble">Apenas R$ {{Product.Price}}!</div>\n  <div class="footer-note">{{Product.Footer}}</div>\n</div>`,
+                css: `/* social-post-instagram styles.css */\n.instagram-post {\n  width: 100%;\n  height: 100%;\n  background-color: #111114;\n  color: #ffffff;\n  padding: 24px;\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n  align-items: center;\n  text-align: center;\n}\n.badge {\n  background-color: #ef4444;\n  padding: 4px 8px;\n  font-size: 11px;\n  margin-bottom: 12px;\n  border-radius: 2px;\n}`
+            }
+        };
+
+        let terminalTimeout = null;
+        let isBotRunning = false;
+        let botInterval = null;
+
+        // Inicializar
+        window.addEventListener('load', () => {
+            const term = document.getElementById('terminal-logs');
+            term.innerHTML = `
+                <div class="terminal-line"><span class="time">[14:00:01]</span> <span class="info">[INFO]</span> Inicializando servidor RZND Media local...</div>
+                <div class="terminal-line"><span class="time">[14:00:02]</span> <span class="info">[INFO]</span> Servidor escutando na porta <span class="success">3000</span></div>
+                <div class="terminal-line"><span class="time">[14:00:03]</span> <span class="info">[INFO]</span> Carregando templates locais do diretório /templates</div>
+                <div class="terminal-line"><span class="time">[14:00:03]</span> <span class="success">[SUCESSO]</span> 2 templates detectados com sucesso.</div>
+                <div class="terminal-line"><span class="time">[14:00:05]</span> <span class="info">[INFO]</span> Fila de aprovação do Worker carregada. 3 posts detectados.</div>
+            `;
+            
+            // Injeta o código inicial do editor
+            const codeArea = document.getElementById('template-code-area');
+            if (codeArea) {
+                codeArea.value = templatesCode[currentTemplateId][activeTemplateTab];
+            }
+            updateTemplatePreview();
+            
+            // Inicializações do Monitor de Lote (Power User)
+            renderJobProfiles();
+            switchJobProvider();
+            filterJobResults('all');
+        });
+
+        // --- NAVEGAÇÃO DOS MÓDULOS (ACTIVITY BAR) ---
+        function switchMainTab(tabId, buttonEl) {
+            document.querySelectorAll('.activity-btn').forEach(btn => btn.classList.remove('active'));
+            buttonEl.classList.add('active');
+
+            document.querySelectorAll('.context-explorer').forEach(ex => ex.style.display = 'none');
+            const targetSidebar = document.getElementById(`sidebar-${tabId}`);
+            if (targetSidebar) targetSidebar.style.display = 'flex';
+
+            document.querySelectorAll('.workspace-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`content-${tabId}`).classList.add('active');
+
+            const breadcrumbEl = document.getElementById('workspace-breadcrumbs');
+            breadcrumbEl.innerHTML = `<span>rznd-media</span> &gt; <span class="active">${tabId === 'dashboard' ? 'monitor-lote' : tabId}</span>`;
+
+            if (tabId === 'providers') {
+                renderSqlProductsTable();
+            }
+            if (tabId === 'outputs') {
+                renderGeneratedFilesGrid();
+            }
+            if (tabId === 'dashboard') {
+                filterJobResults(currentJobFilter);
+            }
+        }
+
+        // --- SISTEMA DE LOGS EM MODAL AUTOMÁTICO (AUTO-FADE) ---
+        function showLogsModalAuto() {
+            const modal = document.getElementById('terminal-logs-modal');
+            modal.classList.add('show');
+
+            if (terminalTimeout) clearTimeout(terminalTimeout);
+
+            terminalTimeout = setTimeout(() => {
+                hideLogsModal();
+            }, 4000);
+        }
+
+        function toggleLogsModalManual() {
+            const modal = document.getElementById('terminal-logs-modal');
+            if (modal.classList.contains('show')) {
+                hideLogsModal();
+            } else {
+                modal.classList.add('show');
+                if (terminalTimeout) clearTimeout(terminalTimeout);
+            }
+        }
+
+        function hideLogsModal() {
+            const modal = document.getElementById('terminal-logs-modal');
+            modal.classList.remove('show');
+        }
+
+        // --- AÇÕES DO PAINEL DE APROVAÇÃO (DASHBOARD) ---
+        function renderApprovalQueue() {
+            const listContainer = document.getElementById('approval-queue-list');
+            listContainer.innerHTML = '';
+
+            if (approvalQueue.length === 0) {
+                listContainer.innerHTML = `<div style="padding: 16px; text-align:center; color:var(--text-secondary);">Fila de aprovação vazia.</div>`;
+                return;
+            }
+
+        // --- MONITOR DE LOTE (BATCH RUNTIME & AUTOMATION) ---
+
+        function renderJobProfiles() {
+            const list = document.getElementById('job-profiles-list');
+            if (!list) return;
+            list.innerHTML = '';
+
+            jobProfiles.forEach(prof => {
+                const isSelected = (prof.id === activeJobProfileId);
+                const li = document.createElement('li');
+                li.className = `explorer-item ${isSelected ? 'active' : ''}`;
+                li.onclick = () => selectJobProfile(prof.id);
+
+                li.innerHTML = `
+                    <div class="explorer-item-header">
+                        <span>${prof.name}</span>
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </div>
+                    <div class="explorer-item-meta">
+                        <span>Provider: ${prof.provider}</span>
+                        <span>Folder: /${prof.folder}/</span>
+                    </div>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function selectJobProfile(profileId) {
+            activeJobProfileId = profileId;
+            renderJobProfiles();
+
+            const prof = jobProfiles.find(p => p.id === profileId);
+            if (!prof) return;
+
+            document.getElementById('job-provider-select').value = prof.provider;
+            document.getElementById('job-template-select').value = prof.template;
+            document.getElementById('job-folder-select').value = prof.folder;
+
+            logJobConsole(`[SYSTEM] Carregado Job Profile: "${profileId}"`, "info");
+            switchJobProvider();
+        }
+
+        function switchJobProvider() {
+            const providerId = document.getElementById('job-provider-select').value;
+            const schema = providerSchemas[providerId];
+            if (!schema) return;
+
+            // Carrega dropdowns do Mapping do Job
+            const selects = ['job-map-name', 'job-map-price', 'job-map-tag', 'job-map-footer', 'job-map-image'];
+            selects.forEach(selId => {
+                const select = document.getElementById(selId);
+                if (!select) return;
+                select.innerHTML = '';
+                
+                const optNone = document.createElement('option');
+                optNone.value = '';
+                optNone.textContent = '-- Sem Mapeamento --';
+                select.appendChild(optNone);
+
+                schema.columns.forEach(col => {
+                    const opt = document.createElement('option');
+                    opt.value = col;
+                    opt.textContent = col;
+                    select.appendChild(opt);
+                });
+            });
+
+            // Conexão Automática baseado em nomes de colunas
+            schema.columns.forEach(col => {
+                const lowerCol = col.toLowerCase();
+                if (lowerCol.includes('name') || lowerCol.includes('nome')) {
+                    document.getElementById('job-map-name').value = col;
+                }
+                if (lowerCol.includes('price') || lowerCol.includes('preco') || lowerCol.includes('promo')) {
+                    document.getElementById('job-map-price').value = col;
+                }
+                if (lowerCol.includes('tag') || lowerCol.includes('category') || lowerCol.includes('categoria') || lowerCol.includes('origem')) {
+                    document.getElementById('job-map-tag').value = col;
+                }
+                if (lowerCol.includes('sku') || lowerCol.includes('horario') || lowerCol.includes('id')) {
+                    document.getElementById('job-map-footer').value = col;
+                }
+                if (lowerCol.includes('photo') || lowerCol.includes('imagem') || lowerCol.includes('img') || lowerCol.includes('pic')) {
+                    document.getElementById('job-map-image').value = col;
+                }
+            });
+
+            logJobConsole(`[MAPPING] Provedor de dados alterado para ${providerId}. Variáveis automáticas conectadas.`, "info");
+            updateJobPreview();
+        }
+
+        function updateJobMapping() {
+            switchJobProvider();
+        }
+
+        function updateJobPreview() {
+            // Apenas para log do Mapping
+            const providerId = document.getElementById('job-provider-select').value;
+            const nameCol = document.getElementById('job-map-name').value;
+            const priceCol = document.getElementById('job-map-price').value;
+            if (nameCol && priceCol) {
+                logJobConsole(`[MAPPING] Variável {{Name}} -> Coluna [${nameCol}] | {{Price}} -> Coluna [${priceCol}]`, "info");
+            }
+        }
+
+        // --- MODO DEBUG MANUAL DRAWERS ---
+        function toggleDebugManualDrawer() {
+            const drawer = document.getElementById('debug-manual-drawer');
+            if (drawer.style.display === 'none') {
+                drawer.style.display = 'block';
+                logJobConsole("[DEBUG] Painel de renderização manual (Debug) aberto.", "info");
+            } else {
+                drawer.style.display = 'none';
+            }
+        }
+
+        function runDebugPreviewSim() {
+            const title = document.getElementById('dbg-title').value;
+            const price = document.getElementById('dbg-price').value;
+            
+            logJobConsole(`[DEBUG-RENDER] Compilando e testando render de teste único...`, "info");
+            logJobConsole(`[DEBUG-RENDER] [TEST] Title: "${title}" | Price: "R$ ${price}"`, "info");
+            
+            showToast("Gerando renderização de teste...", "success");
+            setTimeout(() => {
+                logJobConsole(`[DEBUG-RENDER] [SUCESSO] Preview gerado com sucesso. Status: OK.`, "success");
+                showToast("Teste único renderizado com sucesso!", "success");
+            }, 800);
+        }
+
+        function saveJobProfileSim() {
+            showToast("Job Profile salvo com sucesso!", "success");
+            const profName = activeJobProfileId;
+            logJobConsole(`[SYSTEM] [SALVO] Configurações de Job Profile "${profName}" salvas em config/jobs.json`, "success");
+        }
+
+        function toggleContinuousAutomationSim() {
+            const isChecked = document.getElementById('job-automation-switch').checked;
+            isContinuousAutomationActive = isChecked;
+            
+            if (isChecked) {
+                logJobConsole("[AUTOMATION] Modo Automação Contínua ATIVO.", "success");
+                logJobConsole("[AUTOMATION] Ouvindo eventos de atualização de fontes de dados locais (CSV, banco de dados ou bots).", "info");
+                showToast("Automação de Lote Ativada!", "success");
+            } else {
+                logJobConsole("[AUTOMATION] Modo Automação Contínua DESATIVADO.", "warning");
+                showToast("Automação de Lote Desativada.", "info");
+            }
+        }
+
+        // --- EXECUÇÃO EM LOTE MASSIVA (.NET Core BackgroundWorker Simulator) ---
+        function runJobBatchSim() {
+            if (isJobRunning) return;
+
+            const providerId = document.getElementById('job-provider-select').value;
+            const templateId = document.getElementById('job-template-select').value;
+            const folderOut = document.getElementById('job-folder-select').value;
+            const schema = providerSchemas[providerId];
+
+            const nameCol = document.getElementById('job-map-name').value;
+            const priceCol = document.getElementById('job-map-price').value;
+            const tagCol = document.getElementById('job-map-tag').value;
+            const footerCol = document.getElementById('job-map-footer').value;
+            const imageCol = document.getElementById('job-map-image').value;
+
+            if (!nameCol || !priceCol) {
+                showToast("Mapeamento inválido!", "error");
+                logJobConsole("[ERRO] Falha ao iniciar Job. Variáveis {{Name}} e {{Price}} precisam estar mapeadas.", "error");
+                return;
+            }
+
+            isJobRunning = true;
+            document.getElementById('btn-job-execute').disabled = true;
+            document.getElementById('job-progress-container').style.display = 'flex';
+            document.getElementById('job-runtime-status-badge').textContent = "RUNNING";
+            document.getElementById('job-runtime-status-badge').style.backgroundColor = "rgba(37,99,235,0.15)";
+            document.getElementById('job-runtime-status-badge').style.color = "#2563eb";
+
+            clearJobConsoleSim();
+            logJobConsole(`[SYSTEM] Iniciando motor de lote (.NET Core Host Worker Services)...`, "info");
+            logJobConsole(`[WORKER] Resolvendo dependências do provider: ${providerId}...`, "info");
+            logJobConsole(`[WORKER] Carregados ${schema.data.length} produtos da fonte de dados local.`, "info");
+            logJobConsole(`[WORKER] Iniciando geração headless para o template "${templateId}"`, "info");
+
+            let progress = 0;
+            let currentItem = 0;
+            const progBar = document.getElementById('job-progress-bar');
+            const progStatus = document.getElementById('job-progress-status');
+            const progPercent = document.getElementById('job-progress-percent');
+
+            // Limpa resultados anteriores na simulação de execução
+            jobResults = [];
+            filterJobResults(currentJobFilter);
+
+            const interval = setInterval(() => {
+                progress += 5;
+                progBar.style.width = `${progress}%`;
+                progPercent.textContent = `${progress}%`;
+
+                if (progress % 20 === 0 && currentItem < schema.data.length) {
+                    const row = schema.data[currentItem];
+                    const itemNum = currentItem + 1;
+                    
+                    logJobConsole(`[PUPPETEER] Instanciando headless Chrome para item ${itemNum}/${schema.data.length}`, "info");
+                    
+                    // Falha proposital do 2º item para demonstrar filtros de erro
+                    if (itemNum === 2) {
+                        setTimeout(() => {
+                            logJobConsole(`[RENDER] [FALHA] Item: "${row[nameCol] || 'N/A'}" falhou. Detalhe: Erro de carregamento da imagem do produto (HTTP 404)`, "error");
+                            
+                            jobResults.push({
+                                id: Date.now() + itemNum,
+                                name: `out_err_${itemNum}.png`,
+                                status: "error",
+                                message: "Erro: Conexão recusada ao buscar imagem do produto (HTTP 404)",
+                                path: `C:/Repos/rznd-media/output/${folderOut}/out_err_${itemNum}.png`,
+                                title: row[nameCol] || 'Produto com erro',
+                                price: row[priceCol] || '0,00',
+                                tag: row[tagCol] || 'CATEGORIA'
+                            });
+                            filterJobResults(currentJobFilter);
+                        }, 200);
+                    } else {
+                        setTimeout(() => {
+                            logJobConsole(`[RENDER] [SUCESSO] Capturada viewport de DOM renderizada para "${row[nameCol]}"`, "success");
+                            logJobConsole(`[WORKER] Arquivo salvo em: /output/${folderOut}/out_batch_${itemNum}.png`, "success");
+                            
+                            jobResults.push({
+                                id: Date.now() + itemNum,
+                                name: `out_batch_${itemNum}.png`,
+                                status: "success",
+                                message: "Renderizado com sucesso via Puppeteer",
+                                path: `C:/Repos/rznd-media/output/${folderOut}/out_batch_${itemNum}.png`,
+                                title: row[nameCol],
+                                price: row[priceCol],
+                                tag: row[tagCol] || 'CATEGORIA'
+                            });
+                            
+                            // Adiciona arquivo à lista global de outputs
+                            mockGeneratedFiles.push({
+                                id: mockGeneratedFiles.length + 1,
+                                name: `out_batch_${itemNum}.png`,
+                                size: "118 KB",
+                                path: `C:/Repos/rznd-media/output/${folderOut}/out_batch_${itemNum}.png`,
+                                title: row[nameCol],
+                                price: row[priceCol],
+                                tag: row[tagCol] || 'CATEGORIA',
+                                footer: row[footerCol] || ''
+                            });
+                            filterJobResults(currentJobFilter);
+                        }, 200);
+                    }
+                    currentItem++;
+                }
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    isJobRunning = false;
+                    document.getElementById('btn-job-execute').disabled = false;
+                    document.getElementById('job-progress-container').style.display = 'none';
+                    
+                    const successCount = jobResults.filter(r => r.status === 'success').length;
+                    const errorCount = jobResults.filter(r => r.status === 'error').length;
+                    
+                    document.getElementById('job-runtime-status-badge').textContent = "CONCLUÍDO";
+                    document.getElementById('job-runtime-status-badge').style.backgroundColor = "rgba(16,185,129,0.15)";
+                    document.getElementById('job-runtime-status-badge').style.color = "#10b981";
+
+                    logJobConsole(`[SYSTEM] Lote finalizado. Total: ${jobResults.length} | Sucessos: ${successCount} | Erros: ${errorCount}`, "success");
+                    showToast(`Build concluído! ${successCount} gerados, ${errorCount} erros.`, errorCount > 0 ? "error" : "success");
+                }
+            }, 150);
+        }
+
+        // --- FILTRAGEM E RE-EXECUÇÃO DE ITENS COM ERRO ---
+        function filterJobResults(filterType) {
+            currentJobFilter = filterType;
+            
+            document.querySelectorAll('#job-result-filter .segment-btn').forEach(btn => btn.classList.remove('active'));
+            if (filterType === 'all') document.getElementById('btn-filter-all').classList.add('active');
+            if (filterType === 'success') document.getElementById('btn-filter-success').classList.add('active');
+            if (filterType === 'error') document.getElementById('btn-filter-error').classList.add('active');
+
+            const container = document.getElementById('job-results-list-container');
+            container.innerHTML = '';
+
+            const filtered = jobResults.filter(res => {
+                if (filterType === 'all') return true;
+                return res.status === filterType;
+            });
+
+            document.getElementById('job-results-count').textContent = `${filtered.length} itens`;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-secondary); font-size:11px;">Nenhum resultado correspondente.</div>`;
+                return;
+            }
+
+            filtered.forEach(res => {
+                const div = document.createElement('div');
+                div.style.padding = '10px';
+                div.style.borderBottom = '1px solid var(--border-color)';
+                div.style.display = 'flex';
+                div.style.alignItems = 'center';
+                div.style.justifyContent = 'space-between';
+                div.style.gap = '10px';
+
+                const isSuccess = (res.status === 'success');
+
+                div.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span class="status-dot ${isSuccess ? 'success' : 'danger'}" style="width:8px; height:8px; flex-shrink:0;"></span>
+                        <div style="display:flex; flex-direction:column;">
+                            <span style="font-size:11px; font-weight:700; color:var(--text-primary);">${res.title}</span>
+                            <span style="font-size:9px; color:${isSuccess ? 'var(--text-secondary)' : 'var(--color-error)'};">${res.message}</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:6px; align-items:center;">
+                        <span style="font-size:9px; color:var(--text-secondary); font-family:monospace;">${isSuccess ? 'out.png' : 'fail.log'}</span>
+                        ${!isSuccess ? `<button class="btn btn-sm" style="padding:2px 6px; font-size:9px; background-color:rgba(37,99,235,0.1); border-color:rgba(37,99,235,0.2); color:#2563eb;" onclick="retrySingleJobItem(${res.id})">Corrigir & Rodar</button>` : ''}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function retrySingleJobItem(id) {
+            const item = jobResults.find(r => r.id === id);
+            if (!item) return;
+
+            logJobConsole(`[WORKER] [RETRY] Forçando re-execução para item ID: ${id} ("${item.title}")`, "info");
+            logJobConsole(`[PUPPETEER] Instanciando Chromium... Renderizando viewport HTML do template.`, "info");
+            
+            showToast(`Re-renderizando item: ${item.title}`, "info");
+
+            setTimeout(() => {
+                item.status = "success";
+                item.message = "Corrigido e gerado com sucesso via .NET BackgroundService";
+                logJobConsole(`[WORKER] [RETRY] Sucesso: out_batch_corrigido_${id}.png gerado.`, "success");
+                showToast("Arte gerada com sucesso!", "success");
+                
+                filterJobResults(currentJobFilter);
+            }, 1000);
+        }
+
+        function clearJobConsoleSim() {
+            document.getElementById('job-console-logs').innerHTML = `<span style="color:#5c6370;">[SYSTEM] Console limpo. Aguardando execuções...</span>`;
+        }
+
+        function logJobConsole(text, type) {
+            const consoleBox = document.getElementById('job-console-logs');
+            if (!consoleBox) return;
+
+            const now = new Date();
+            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
+            let color = "#a6accd";
+            if (type === 'success') color = "#10b981";
+            if (type === 'warning') color = "#f59e0b";
+            if (type === 'error') color = "#ef4444";
+
+            const div = document.createElement('div');
+            div.style.marginBottom = '4px';
+            div.innerHTML = `<span style="color:#5c6370;">[${timeStr}]</span> <span style="color:${color};">${text}</span>`;
+            consoleBox.appendChild(div);
+            consoleBox.scrollTop = consoleBox.scrollHeight;
+        }
+
+        function nextApprovalItem() {
+            // No-op placeholder to maintain backward compatibility
+        }
+
+        // --- CONEXÃO DE DADOS & ESCALA (MODO POWER USER) ---
+        const providerSchemas = {
+            ERP_System: {
+                columns: ['id', 'name', 'sku', 'price', 'photo'],
+                data: [
+                    { id: 1, name: "Camisa Polo Classic Blue", sku: "POLO-BL-01", price: "89,90", photo: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=300" },
+                    { id: 2, name: "Calça Jeans Slim Fit", sku: "JEANS-SL-02", price: "129,90", photo: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=300" },
+                    { id: 3, name: "Jaqueta de Couro Biker", sku: "JAQ-CO-05", price: "349,90", photo: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300" }
+                ]
+            },
+            CSV_Import: {
+                columns: ['linha', 'nome', 'sku', 'preco', 'categoria', 'imagem'],
+                data: [
+                    { linha: 1, nome: "Tênis Running Air", sku: "TENIS-RUN-02", preco: "299,90", categoria: "Calçados", imagem: "https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=300" },
+                    { linha: 2, nome: "Boné Aba Reta Black", sku: "BONE-ABA-04", preco: "59,90", categoria: "Acessórios", imagem: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=300" },
+                    { linha: 3, nome: "Mochila Adventure 30L", sku: "MOCH-ADV-01", preco: "189,90", categoria: "Acessórios", imagem: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=300" }
+                ]
+            },
+            REST_API_Client: {
+                columns: ['api_id', 'product_name', 'sku_code', 'price_final', 'stock_units', 'product_img'],
+                data: [
+                    { api_id: "api_1", product_name: "Notebook Core i7 Pro", sku_code: "NOTE-I7-16G", price_final: "4.899,00", stock_units: 12, product_img: "https://images.unsplash.com/photo-1496181130204-755241524eab?w=300" },
+                    { api_id: "api_2", product_name: "Monitor UltraWide 29'", sku_code: "MON-UW-29", price_final: "1.299,00", stock_units: 8, product_img: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=300" }
+                ]
+            },
+            Promo_Alert_Bot: {
+                columns: ['horario', 'origem_alert', 'product_name', 'price_original', 'price_promo', 'discount_percent', 'alert_photo'],
+                data: [
+                    { horario: "14:15:32", origem_alert: "Telegram Grupo Promo", product_name: "Hamburguer Blend 200g", price_original: "38,00", price_promo: "19,00", discount_percent: "50%", alert_photo: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300" },
+                    { horario: "14:22:10", origem_alert: "E-commerce Central", product_name: "Hamburguer Gourmet Cheddar", price_original: "45,00", price_promo: "29,90", discount_percent: "33%", alert_photo: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=300" }
+                ]
+            }
+        };
+
+        let currentInputMode = "manual";
+
+        function setTemplateInputMode(mode) {
+            currentInputMode = mode;
+            
+            const btnManual = document.getElementById('btn-mode-manual');
+            const btnScale = document.getElementById('btn-mode-scale');
+            const contManual = document.getElementById('input-container-manual');
+            const contScale = document.getElementById('input-container-scale');
+
+            if (mode === 'manual') {
+                btnManual.classList.add('active');
+                btnScale.classList.remove('active');
+                contManual.style.display = 'flex';
+                contScale.style.display = 'none';
+                logTerminal("Escala: Entrada alterada para Modo Manual.", "info");
+                updateTemplatePreview();
+            } else {
+                btnManual.classList.remove('active');
+                btnScale.classList.add('active');
+                contManual.style.display = 'none';
+                contScale.style.display = 'flex';
+                logTerminal("Escala: Entrada alterada para Conexão de Dados.", "info");
+                switchScaleProvider();
+            }
+        }
+
+        function switchScaleProvider() {
+            const providerId = document.getElementById('scale-provider-select').value;
+            const schema = providerSchemas[providerId];
+
+            document.getElementById('scale-connected-provider-name').textContent = `[${providerId}]`;
+            logTerminal(`Conectando template às variáveis da tabela: ${providerId}...`, "info");
+
+            // Carrega dropdowns do Mapping
+            const selects = ['map-name', 'map-price', 'map-tag', 'map-footer', 'map-image'];
+            selects.forEach(selId => {
+                const select = document.getElementById(selId);
+                select.innerHTML = '';
+                
+                // Opção em branco
+                const optNone = document.createElement('option');
+                optNone.value = '';
+                optNone.textContent = '-- Sem Mapeamento --';
+                select.appendChild(optNone);
+
+                schema.columns.forEach(col => {
+                    const opt = document.createElement('option');
+                    opt.value = col;
+                    opt.textContent = col;
+                    select.appendChild(opt);
+                });
+            });
+
+            // Conexão Automática (Auto-Map) baseado em nomes de colunas
+            schema.columns.forEach(col => {
+                const lowerCol = col.toLowerCase();
+                if (lowerCol.includes('name') || lowerCol.includes('nome')) {
+                    document.getElementById('map-name').value = col;
+                }
+                if (lowerCol.includes('price') || lowerCol.includes('preco') || lowerCol.includes('promo')) {
+                    document.getElementById('map-price').value = col;
+                }
+                if (lowerCol.includes('tag') || lowerCol.includes('category') || lowerCol.includes('categoria') || lowerCol.includes('origem')) {
+                    document.getElementById('map-tag').value = col;
+                }
+                if (lowerCol.includes('sku') || lowerCol.includes('horario') || lowerCol.includes('id')) {
+                    document.getElementById('map-footer').value = col;
+                }
+                if (lowerCol.includes('photo') || lowerCol.includes('imagem') || lowerCol.includes('img') || lowerCol.includes('pic')) {
+                    document.getElementById('map-image').value = col;
+                }
+            });
+
+            document.getElementById('auto-map-indicator').style.display = 'inline-flex';
+            logTerminal("Mapping: Mapeamento de variáveis automáticas estabelecido.", "success");
+
+            updateBatchMapping();
+        }
+
+        function updateBatchMapping() {
+            const providerId = document.getElementById('scale-provider-select').value;
+            const schema = providerSchemas[providerId];
+
+            const nameCol = document.getElementById('map-name').value;
+            const priceCol = document.getElementById('map-price').value;
+            const tagCol = document.getElementById('map-tag').value;
+            const footerCol = document.getElementById('map-footer').value;
+            const imageCol = document.getElementById('map-image').value;
+
+            // Rende Preview Table
+            const thead = document.getElementById('scale-preview-thead');
+            const tbody = document.getElementById('scale-preview-tbody');
+
+            thead.innerHTML = `
+                <th>Product.Name ({{Name}})</th>
+                <th>Product.Price ({{Price}})</th>
+                <th>Product.Tag ({{Tag}})</th>
+                <th>Product.Footer ({{Footer}})</th>
+                <th>Product.Image ({{Foto}})</th>
+            `;
+
+            tbody.innerHTML = '';
+            
+            schema.data.forEach((row, idx) => {
+                const tr = document.createElement('tr');
+                tr.style.cursor = 'pointer';
+                tr.onclick = () => loadRowToPreview(row, nameCol, priceCol, tagCol, footerCol, imageCol);
+                
+                const photoSrc = row[imageCol] || '';
+                const photoHtml = photoSrc ? `<div style="width:24px; height:24px; overflow:hidden; border-radius:2px; border:1px solid var(--border-color);"><img src="${photoSrc}" style="width:100%; height:100%; object-fit:cover;"></div>` : '<code>N/A</code>';
+
+                tr.innerHTML = `
+                    <td><strong>${row[nameCol] || ''}</strong></td>
+                    <td>R$ ${row[priceCol] || ''}</td>
+                    <td><span class="file-card-meta">${row[tagCol] || ''}</span></td>
+                    <td><code>${row[footerCol] || ''}</code></td>
+                    <td>${photoHtml}</td>
+                `;
+                tbody.appendChild(tr);
+
+                // Carrega a primeira linha por padrão no Preview
+                if (idx === 0) {
+                    loadRowToPreview(row, nameCol, priceCol, tagCol, footerCol, imageCol);
+                }
+            });
+        }
+
+        function loadRowToPreview(row, nameCol, priceCol, tagCol, footerCol, imageCol) {
+            document.getElementById('preview-title-el').textContent = row[nameCol] || 'Sem Nome';
+            document.getElementById('preview-price-el').textContent = row[priceCol] ? `R$ ${row[priceCol]}` : '';
+            document.getElementById('preview-tag-el').textContent = row[tagCol] || 'SEM CAMPANHA';
+            document.getElementById('preview-footer-el').textContent = row[footerCol] ? `Código Ref: ${row[footerCol]}` : '';
+            if (row[imageCol]) {
+                document.getElementById('preview-image-el').src = row[imageCol];
+            }
+        }
+
+        function simulateProductPhotoUpload() {
+            showToast("Abrindo seletor de arquivos local...", "info");
+            logTerminal("Executando: open_file_dialog --filter='Imagens (*.png, *.jpg)'", "info");
+            
+            setTimeout(() => {
+                const photos = [
+                    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300", // Red sneaker
+                    "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300", // Watch
+                    "https://images.unsplash.com/photo-1560343090-f0409e92791a?w=300", // Shoe
+                    "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300"  // Headphone
+                ];
+                const randomPhoto = photos[Math.floor(Math.random() * photos.length)];
+                document.getElementById('t-image').value = randomPhoto;
+                updateTemplatePreview();
+                logTerminal(`Foto carregada com sucesso: ${randomPhoto.split('/').pop().split('?')[0]}`, "success");
+                showToast("Foto do produto vinculada!", "success");
+            }, 800);
+        }
+
+        // --- CONTROLES DE CÓDIGO (SPLIT MONACO EDITOR) ---
+        function toggleCodeEditor() {
+            const editor = document.getElementById('split-code-editor');
+            if (editor.style.display === 'none') {
+                editor.style.display = 'flex';
+                // Injeta o código ativo
+                document.getElementById('template-code-area').value = templatesCode[currentTemplateId][activeTemplateTab];
+                logTerminal("Editor: Workspace do Editor de código expandido.", "info");
+            } else {
+                editor.style.display = 'none';
+                logTerminal("Editor: Workspace do Editor de código recolhido.", "info");
+            }
+        }
+
+        function toggleBatchExportDropdown() {
+            const menu = document.getElementById('batch-export-menu');
+            menu.classList.toggle('show');
+        }
+
+        window.addEventListener('click', (e) => {
+            if (!e.target.closest('.export-dropdown-container')) {
+                document.getElementById('batch-export-menu').classList.remove('show');
+            }
+        });
+
+        function selectBatchExportAction(action) {
+            document.getElementById('batch-export-menu').classList.remove('show');
+            logTerminal(`[LOTE EXPORT] Iniciando renderização em lote para: ${action.toUpperCase()}`, "info");
+            triggerBatchRenderSim();
+        }
+
+        // --- INICIALIZAÇÃO E CONTROLE DO EDITOR DE CÓDIGO ---
+        function switchEditorTab(tabId) {
+            // Salva o conteúdo atual antes de mudar de aba
+            const area = document.getElementById('template-code-area');
+            templatesCode[currentTemplateId][activeTemplateTab] = area.value;
+
+            activeTemplateTab = tabId;
+
+            // Atualiza botões de abas
+            document.querySelectorAll('.editor-tab').forEach(btn => btn.classList.remove('active'));
+            
+            // Procura aba ativa correspondente
+            if (tabId === 'html') {
+                document.getElementById('editor-tab-html').classList.add('active');
+            } else {
+                document.getElementById('editor-tab-css').classList.add('active');
+            }
+
+            // Carrega novo código
+            area.value = templatesCode[currentTemplateId][tabId];
+            logTerminal(`Editor de Código: Carregada aba de recursos do template: "${tabId.toUpperCase()}"`, "info");
+        }
+
+        function updateTemplatePreviewFromCode() {
+            const area = document.getElementById('template-code-area');
+            templatesCode[currentTemplateId][activeTemplateTab] = area.value;
+            
+            logTerminal("Compilador local: Alteração no código detectada. Recarregando DOM do template...", "info");
+            updateTemplatePreview();
+        }
+
+        function triggerTemplateRenderTest(outputFormat) {
+            showToast(`Extraindo ${outputFormat.toUpperCase()} do HTML com o Puppeteer Headless...`, "success");
+            logTerminal(`[RENDER ENGINE] Abrindo navegador HEADLESS Chromium para captura.`, "info");
+            logTerminal(`Ajustando viewport com base no target: ${activeTemplateDestination.toUpperCase()} (Proporção simulada)`, "info");
+
+            setTimeout(() => {
+                const newId = mockGeneratedFiles.length + 1;
+                const fileName = `out_render_${newId}.${outputFormat}`;
+                
+                const title = document.getElementById('preview-title-el').textContent;
+                const price = document.getElementById('preview-price-el').textContent.replace('R$ ', '');
+                const category = document.getElementById('preview-tag-el').textContent;
+                const footer = document.getElementById('preview-footer-el').textContent;
+
+                mockGeneratedFiles.push({
+                    id: newId,
+                    name: fileName,
+                    size: "185 KB",
+                    path: `C:/Repos/rznd-media/output/${fileName}`,
+                    title: title,
+                    price: price,
+                    tag: category,
+                    footer: footer
+                });
+
+                logTerminal(`[RENDER SUCESSO] Arquivo capturado e salvo localmente: output/${fileName}`, "success");
+                showToast(`Arquivo ${fileName} salvo em /output!`, "success");
+            }, 1000);
+        }
+
+        function triggerExportCatalogHTMLSim() {
+            // Fecha o menu de lote caso esteja aberto
+            document.getElementById('batch-export-menu').classList.remove('show');
+            const redirectUrl = document.getElementById('catalog-redirect-url').value;
+            const foldersGroup = document.getElementById('catalog-folders-group').value;
+            
+            showToast("Gerando catálogo HTML B2C...", "info");
+            logTerminal(`[CATÁLOGO ENGINE] Compilando catálogo para todos os produtos mapeados...`, "info");
+            logTerminal(`[CATÁLOGO ENGINE] URL de Checkout/Redirecionamento base: ${redirectUrl}`, "info");
+            logTerminal(`[CATÁLOGO ENGINE] Estrutura do diretório de saída: ${foldersGroup === 'category' ? 'Pastas por Categoria' : 'Flat Única'}`, "info");
+
+            setTimeout(() => {
+                const newId = mockGeneratedFiles.length + 1;
+                const fileName = `catalogo_loja_completo_${Date.now().toString().slice(-4)}.html`;
+                
+                mockGeneratedFiles.push({
+                    id: newId,
+                    name: fileName,
+                    size: "42 KB",
+                    path: `C:/Repos/rznd-media/output/${fileName}`,
+                    title: "Catálogo Completo de Vendas",
+                    price: "Preços Integrados",
+                    tag: "CATÁLOGO COMPLETO",
+                    footer: `Redirect: ${redirectUrl}`
+                });
+
+                logTerminal(`[CATÁLOGO SUCESSO] Estrutura HTML gerada. Links de WhatsApp injetados com sucesso.`, "success");
+                logTerminal(`[CATÁLOGO SUCESSO] Arquivo gravado em: C:/Repos/rznd-media/output/${fileName}`, "success");
+                showToast(`Catálogo B2C exportado com sucesso!`, "success");
+            }, 1200);
+        }
+
+        function setTemplateDestination(destination, buttonEl) {
+            const container = document.getElementById('template-destination-select');
+            container.querySelectorAll('.segment-btn').forEach(btn => btn.classList.remove('active'));
+            buttonEl.classList.add('active');
+            activeTemplateDestination = destination;
+            logTerminal(`Viewport de geração de mídia definido como: ${destination.toUpperCase()}`, "info");
+
+            // Redimensionamento dinâmico do Live Preview
+            const previewCard = document.getElementById('template-card-preview');
+            if (destination === 'telegram') {
+                previewCard.style.width = '480px';
+                previewCard.style.height = '270px';
+            } else if (destination === 'tiktok') {
+                previewCard.style.width = '270px';
+                previewCard.style.height = '480px';
+            } else {
+                previewCard.style.width = '360px';
+                previewCard.style.height = '360px';
+            }
+        }
+
+        // --- SELEÇÃO DE TEMPLATES ---
+        function selectTemplate(templateName) {
+            // Salva código do template anterior
+            const area = document.getElementById('template-code-area');
+            if (area) {
+                templatesCode[currentTemplateId][activeTemplateTab] = area.value;
+            }
+
+            document.querySelectorAll('#sidebar-templates .explorer-item').forEach(item => item.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            currentTemplateId = templateName;
+
+            const breadcrumbEl = document.getElementById('workspace-breadcrumbs');
+            breadcrumbEl.innerHTML = `<span>rznd-media</span> &gt; <span>templates</span> &gt; <span class="active">${templateName}</span>`;
+
+            if (templateName === 'social-post-instagram') {
+                document.getElementById('t-title').value = "Combo Hamburguer + Fritas";
+                document.getElementById('t-price').value = "34,90";
+                document.getElementById('t-category').value = "PROMOÇÃO GOURMET";
+                document.getElementById('t-footer').value = "*Válido apenas para delivery local.";
+            } else {
+                document.getElementById('t-title').value = "Camisa Polo Classic Blue";
+                document.getElementById('t-price').value = "89,90";
+                document.getElementById('t-category').value = "COLEÇÃO OUTONO";
+                document.getElementById('t-footer').value = "*Promoção por tempo limitado.";
+            }
+
+            // Atualiza área do editor de código
+            if (area) {
+                area.value = templatesCode[templateName][activeTemplateTab];
+            }
+
+            updateTemplatePreview();
+            logTerminal(`Template ativo alterado para "${templateName}". Arquivo index.html e styles.css carregados no painel.`, "info");
+        }
+
+        // --- SELEÇÃO DE PROVIDERS ---
+        function selectProvider(providerName) {
+            document.querySelectorAll('#sidebar-providers .explorer-item').forEach(item => item.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            const breadcrumbEl = document.getElementById('workspace-breadcrumbs');
+            breadcrumbEl.innerHTML = `<span>rznd-media</span> &gt; <span>providers</span> &gt; <span class="active">${providerName}</span>`;
+
+            const viewIds = ['sql', 'file', 'api', 'bot'];
+            viewIds.forEach(view => {
+                document.getElementById(`provider-view-${view}`).style.display = 'none';
+            });
+
+            if (providerName === 'ERP_System') {
+                document.getElementById('provider-view-sql').style.display = 'flex';
+                renderSqlProductsTable();
+            } else if (providerName === 'CSV_Import') {
+                document.getElementById('provider-view-file').style.display = 'flex';
+            } else if (providerName === 'REST_API_Client') {
+                document.getElementById('provider-view-api').style.display = 'flex';
+                renderApiProductsTable(false);
+            } else if (providerName === 'Promo_Alert_Bot') {
+                document.getElementById('provider-view-bot').style.display = 'flex';
+                renderBotAlertsTable();
+            }
+        }
+
+        // --- SIMULAÇÃO LIVE PREVIEW NO EDITOR ---
+        function updateTemplatePreview() {
+            const titleVal = document.getElementById('t-title').value;
+            const priceVal = document.getElementById('t-price').value;
+            const categoryVal = document.getElementById('t-category').value;
+            const footerVal = document.getElementById('t-footer').value;
+            const imageVal = document.getElementById('t-image') ? document.getElementById('t-image').value : '';
+
+            document.getElementById('preview-title-el').textContent = titleVal;
+            document.getElementById('preview-price-el').textContent = priceVal ? `R$ ${priceVal}` : '';
+            document.getElementById('preview-tag-el').textContent = categoryVal;
+            document.getElementById('preview-footer-el').textContent = footerVal;
+            if (imageVal) {
+                document.getElementById('preview-image-el').src = imageVal;
+            }
+        }
+
+        // --- SIMULAÇÃO DE CRUD (SQL PROVIDER) ---
+        function renderSqlProductsTable() {
+            const tbody = document.getElementById('sql-products-tbody');
+            tbody.innerHTML = '';
+
+            mockProducts.forEach(prod => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${prod.id}</td>
+                    <td><strong>${prod.name}</strong></td>
+                    <td><code>${prod.sku}</code></td>
+                    <td>R$ ${prod.price}</td>
+                    <td>
+                        <button class="btn btn-sm" onclick="editProduct(${prod.id})">Editar</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteProduct(${prod.id})">Deletar</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function clearCrudForm() {
+            document.getElementById('crud-p-id').value = '';
+            document.getElementById('crud-p-name').value = '';
+            document.getElementById('crud-p-sku').value = '';
+            document.getElementById('crud-p-price').value = '';
+            document.getElementById('crud-form-title').textContent = 'Adicionar Produto';
+        }
+
+        function editProduct(id) {
+            const prod = mockProducts.find(p => p.id === id);
+            if (prod) {
+                document.getElementById('crud-p-id').value = prod.id;
+                document.getElementById('crud-p-name').value = prod.name;
+                document.getElementById('crud-p-sku').value = prod.sku;
+                document.getElementById('crud-p-price').value = prod.price;
+                document.getElementById('crud-form-title').textContent = 'Editar Produto';
+            }
+        }
+
+        function saveCrudProduct() {
+            const idVal = document.getElementById('crud-p-id').value;
+            const nameVal = document.getElementById('crud-p-name').value;
+            const skuVal = document.getElementById('crud-p-sku').value;
+            const priceVal = document.getElementById('crud-p-price').value;
+
+            if (!nameVal || !skuVal || !priceVal) {
+                showToast("Por favor, preencha todos os campos!", "error");
+                return;
+            }
+
+            if (idVal) {
+                const index = mockProducts.findIndex(p => p.id == idVal);
+                if (index !== -1) {
+                    mockProducts[index] = { id: parseInt(idVal), name: nameVal, sku: skuVal, price: priceVal };
+                    showToast("Produto atualizado localmente!", "success");
+                    logTerminal(`Banco SQL: Produto ID ${idVal} atualizado com sucesso.`, "success");
+                }
+            } else {
+                const newId = mockProducts.length > 0 ? Math.max(...mockProducts.map(p => p.id)) + 1 : 1;
+                mockProducts.push({ id: newId, name: nameVal, sku: skuVal, price: priceVal });
+                showToast("Produto inserido localmente!", "success");
+                logTerminal(`Banco SQL: Novo produto ID ${newId} inserido com sucesso.`, "success");
+            }
+
+            clearCrudForm();
+            renderSqlProductsTable();
+        }
+
+        function deleteProduct(id) {
+            mockProducts = mockProducts.filter(p => p.id !== id);
+            showToast("Produto excluído do banco local!", "success");
+            logTerminal(`Banco SQL: Produto ID ${id} removido.`, "success");
+            renderSqlProductsTable();
+        }
+
+        // --- SIMULAÇÃO REST API ---
+        function renderApiProductsTable(hasFetched = false) {
+            const tbody = document.getElementById('api-products-tbody');
+            tbody.innerHTML = '';
+
+            if (!hasFetched) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">Nenhum produto requisitado. Clique em "Requisitar Produtos".</td></tr>`;
+                return;
+            }
+
+            mockApiProducts.forEach(prod => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><code>${prod.id}</code></td>
+                    <td><strong>${prod.name}</strong></td>
+                    <td><code>${prod.sku}</code></td>
+                    <td>R$ ${prod.price}</td>
+                    <td>${prod.stock} un</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function fetchApiProductsSim() {
+            const endpoint = document.getElementById('api-endpoint-input').value;
+            logTerminal(`Enviando requisição GET para API: ${endpoint}`, "info");
+            showToast("Carregando dados da API...", "info");
+            
+            setTimeout(() => {
+                logTerminal("Resposta recebida da API (200 OK). Sincronizando 2 produtos.", "success");
+                showToast("API sincronizada com sucesso!", "success");
+                renderApiProductsTable(true);
+            }, 1000);
+        }
+
+        // --- SIMULAÇÃO PROMO ALERT BOT (CRAWLER) ---
+        function renderBotAlertsTable() {
+            const tbody = document.getElementById('bot-alerts-tbody');
+            tbody.innerHTML = '';
+
+            if (!isBotRunning) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">Bot inativo. Inicie o bot no botão superior.</td></tr>`;
+                return;
+            }
+
+            mockCrawledPromos.forEach(alert => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><span class="time">${alert.time}</span></td>
+                    <td><span class="file-card-meta">${alert.source}</span></td>
+                    <td><strong>${alert.name}</strong></td>
+                    <td style="text-decoration: line-through; color: var(--text-secondary);">R$ ${alert.normalPrice}</td>
+                    <td style="color: var(--color-success); font-weight: 700;">R$ ${alert.alertPrice}</td>
+                    <td><span class="status-dot success" style="margin-right: 4px;"></span> ${alert.discount} OFF</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function togglePromoBotSim() {
+            const btn = document.getElementById('bot-toggle-btn');
+            const statusBadge = document.getElementById('bot-status-badge');
+            const statusDot = document.getElementById('bot-status-dot');
+            const keyword = document.getElementById('bot-keyword-input').value;
+
+            if (!isBotRunning) {
+                isBotRunning = true;
+                btn.textContent = "Parar Varredura do Bot";
+                btn.classList.add('btn-danger');
+                statusBadge.className = "provider-status-badge active";
+                statusDot.className = "status-dot success";
+                statusBadge.innerHTML = `<span class="status-dot success" id="bot-status-dot"></span> Monitorando`;
+                
+                logTerminal(`Bot de Promoção iniciado. Buscando alertas para a palavra-chave: "${keyword}"...`, "info");
+                showToast("Bot de Promoções Ativo!", "success");
+                
+                renderBotAlertsTable();
+
+                botInterval = setInterval(() => {
+                    const now = new Date();
+                    const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+                    
+                    const newAlert = {
+                        time: timeStr,
+                        source: "Web Crawler Central",
+                        name: `Hamburguer Promo Especial #${Math.floor(Math.random()*100)}`,
+                        normalPrice: "40,00",
+                        alertPrice: "24,00",
+                        discount: "40%"
+                    };
+                    mockCrawledPromos.unshift(newAlert);
+                    logTerminal(`[BOT ALERTA] Oferta capturada: ${newAlert.name} por R$ ${newAlert.alertPrice}`, "warning");
+                    showToast(`Novo alerta de promoção capturado!`, "success");
+                    renderBotAlertsTable();
+                }, 5000);
+
+            } else {
+                isBotRunning = false;
+                clearInterval(botInterval);
+                btn.textContent = "Iniciar Varredura do Bot";
+                btn.classList.remove('btn-danger');
+                statusBadge.className = "provider-status-badge";
+                statusBadge.innerHTML = `<span class="status-dot warning" id="bot-status-dot"></span> Inativo`;
+                logTerminal(`Bot de Promoção interrompido localmente.`, "info");
+                showToast("Bot Interrompido.", "info");
+                renderBotAlertsTable();
+            }
+        }
+
+        // --- MONITOR DE CONEXÃO ---
+        function testConnectionSim(providerId) {
+            logTerminal(`Testando conectividade com o provedor: ${providerId}...`, "info");
+            showToast("Estabelecendo conexão física...", "info");
+            setTimeout(() => {
+                logTerminal(`Conexão com ${providerId} estabelecida com sucesso. Latência: 4ms`, "success");
+                showToast("Conexão bem sucedida!", "success");
+            }, 800);
+        }
+
+        // --- RENDERIZADOR DA BIBLIOTECA DE ARQUIVOS (OUTPUTS) ---
+        function renderGeneratedFilesGrid(filter = 'all') {
+            const grid = document.getElementById('output-files-grid');
+            grid.innerHTML = '';
+
+            if (mockGeneratedFiles.length === 0) {
+                grid.innerHTML = `<div style="grid-column: 1/-1; padding: 48px; text-align:center; color:var(--text-secondary);">A pasta de outputs está vazia. Gere novas mídias.</div>`;
+                return;
+            }
+
+            mockGeneratedFiles.forEach(file => {
+                const isPng = file.name.endsWith('.png') || file.name.endsWith('.jpg');
+                if (filter === 'png' && !isPng) return;
+                if (filter === 'html' && isPng) return;
+
+                const card = document.createElement('div');
+                card.className = 'file-card';
+                card.innerHTML = `
+                    <div class="file-card-preview">
+                        ${isPng ? 
+                        `<svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>` :
+                        `<svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/></svg>`
+                        }
+                    </div>
+                    <div class="file-card-details">
+                        <span class="file-card-name" title="${file.name}">${file.name}</span>
+                        <span class="file-card-meta">${file.size}</span>
+                        <div class="file-card-actions">
+                            <button class="btn btn-sm btn-primary" onclick="openGeneratedFilePreviewSim(${file.id})">Abrir</button>
+                            <button class="btn btn-sm" onclick="copyFilePathSim('${file.path}')">Caminho</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteOutputFileSim(${file.id})">&times;</button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function openGeneratedFilePreviewSim(id) {
+            const file = mockGeneratedFiles.find(f => f.id === id);
+            if (file) {
+                showToast(`Visualizando arquivo: ${file.name}`, "info");
+                logTerminal(`Visualizando arquivo local: ${file.name} (caminho: ${file.path})`, "info");
+            }
+        }
+
+        function filterGeneratedFiles(type) {
+            document.querySelectorAll('#sidebar-outputs .explorer-item').forEach(item => item.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            renderGeneratedFilesGrid(type);
+        }
+
+        function clearAllOutputsSim() {
+            mockGeneratedFiles = [];
+            showToast("Biblioteca limpa com sucesso!", "success");
+            logTerminal("Todos os arquivos de output foram excluídos do disco simulado.", "success");
+            renderGeneratedFilesGrid();
+        }
+
+        function copyFilePathSim(path) {
+            showToast("Caminho copiado para o clipboard!", "success");
+            logTerminal(`Caminho absoluto copiado: ${path}`, "info");
+        }
+
+        function deleteOutputFileSim(id) {
+            mockGeneratedFiles = mockGeneratedFiles.filter(f => f.id !== id);
+            showToast("Arquivo removido da pasta de saída!", "success");
+            logTerminal(`Arquivo ID ${id} excluído fisicamente do diretório local /output.`, "success");
+            renderGeneratedFilesGrid();
+        }
+
+        // --- GERAÇÃO DE MÍDIA EM LOTE NO EDITOR ---
+        function triggerBatchRenderSim() {
+            if (currentInputMode === 'manual') {
+                const title = document.getElementById('t-title').value;
+                const price = document.getElementById('t-price').value;
+                const category = document.getElementById('t-category').value;
+                const footer = document.getElementById('t-footer').value;
+
+                showToast("Renderização da mídia iniciada no Puppeteer local...", "success");
+                logTerminal(`Enviando requisição POST para /api/templates/render. Formato: PNG | Destino: ${activeTemplateDestination.toUpperCase()}`, "info");
+                logTerminal("Iniciando instância headless do Chromium via Puppeteer", "info");
+                
+                setTimeout(() => {
+                    const newId = mockGeneratedFiles.length > 0 ? Math.max(...mockGeneratedFiles.map(f => f.id)) + 1 : 1;
+                    const fileName = `out_media_${newId}_${Date.now().toString().slice(-4)}.png`;
+                    const fileObj = {
+                        id: newId,
+                        name: fileName,
+                        size: `124 KB`,
+                        path: `C:/Repos/rznd-media/output/${fileName}`,
+                        title: title,
+                        price: price,
+                        tag: category,
+                        footer: footer
+                    };
+                    mockGeneratedFiles.push(fileObj);
+                    
+                    logTerminal(`Arquivo gerado com sucesso: ${fileObj.path}`, "success");
+                    
+                    if (activeTemplateDestination !== 'local') {
+                        logTerminal(`Publicador (${activeTemplateDestination.toUpperCase()}): Mídia enviada com sucesso para a rede!`, "success");
+                        showToast(`Geração concluída e publicada no ${activeTemplateDestination}!`, "success");
+                    } else {
+                        showToast(`Geração concluída! Arquivo salvo em /output.`, "success");
+                    }
+
+                    // Cria um novo item de aprovação com base no gerado
+                    const approvalId = `post_${Date.now().toString().slice(-4)}`;
+                    approvalQueue.push({
+                        id: approvalId,
+                        title: title,
+                        price: price,
+                        tag: category,
+                        footer: footer,
+                        type: "Imagem",
+                        isCarousel: false,
+                        platform: activeTemplateDestination === 'local' ? "Instagram (1:1)" : `${activeTemplateDestination.charAt(0).toUpperCase() + activeTemplateDestination.slice(1)} (1:1)`,
+                        aspectRatio: "1:1",
+                        timeGenerated: "Há pouco",
+                        status: "Pendente"
+                    });
+                    renderApprovalQueue();
+                }, 1500);
+            } else {
+                // MODO ESCALA (LOTE COMPLETO)
+                const providerId = document.getElementById('scale-provider-select').value;
+                const schema = providerSchemas[providerId];
+                
+                const nameCol = document.getElementById('map-name').value;
+                const priceCol = document.getElementById('map-price').value;
+                const tagCol = document.getElementById('map-tag').value;
+                const footerCol = document.getElementById('map-footer').value;
+
+                if (!nameCol || !priceCol) {
+                    showToast("Erro: Mapeie pelo menos as variáveis Name e Price!", "error");
+                    return;
+                }
+
+                const btn = document.getElementById('btn-execute-batch');
+                const progContainer = document.getElementById('batch-progress-container');
+                const progBar = document.getElementById('batch-progress-bar');
+                const progStatus = document.getElementById('batch-progress-status');
+                const progPercent = document.getElementById('batch-progress-percent');
+
+                btn.disabled = true;
+                progContainer.style.display = 'flex';
+                progBar.style.width = '0%';
+                progPercent.textContent = '0%';
+                
+                logTerminal(`[WORKER] Iniciando lote em massa para Provider: ${providerId} (${schema.data.length} registros)`, "info");
+                logTerminal(`[WORKER] Mapeamento ativo: Title->${nameCol}, Price->${priceCol}, Tag->${tagCol}`, "info");
+                
+                let progress = 0;
+                let activeRow = 0;
+
+                const interval = setInterval(() => {
+                    progress += 10;
+                    progBar.style.width = `${progress}%`;
+                    progPercent.textContent = `${progress}%`;
+                    
+                    if (progress % 30 === 0 && activeRow < schema.data.length) {
+                        const row = schema.data[activeRow];
+                        logTerminal(`[WORKER] [${activeRow + 1}/${schema.data.length}] Capturando viewport para "${row[nameCol]}" via Puppeteer...`, "info");
+                        activeRow++;
+                    }
+
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        
+                        // Adiciona todos os itens gerados na biblioteca e na fila de aprovação
+                        schema.data.forEach((row, i) => {
+                            const newId = mockGeneratedFiles.length + 1;
+                            const fileName = `out_batch_${newId}_${Date.now().toString().slice(-4)}.png`;
+                            mockGeneratedFiles.push({
+                                id: newId,
+                                name: fileName,
+                                size: "115 KB",
+                                path: `C:/Repos/rznd-media/output/${fileName}`,
+                                title: row[nameCol],
+                                price: row[priceCol],
+                                tag: row[tagCol] || 'CAMPANHA',
+                                footer: row[footerCol] || ''
+                            });
+
+                            approvalQueue.push({
+                                id: `post_batch_${newId}`,
+                                title: row[nameCol],
+                                price: row[priceCol],
+                                tag: row[tagCol] || 'CAMPANHA',
+                                footer: row[footerCol] || '',
+                                type: "Imagem",
+                                isCarousel: false,
+                                platform: "Instagram (1:1)",
+                                aspectRatio: "1:1",
+                                timeGenerated: "Há pouco (Lote)",
+                                status: "Pendente"
+                            });
+                        });
+
+                        logTerminal(`[WORKER] Lote concluído com sucesso. ${schema.data.length} arquivos gerados.`, "success");
+                        showToast(`Lote concluído! ${schema.data.length} artes enviadas para Fila de Aprovação.`, "success");
+                        
+                        btn.disabled = false;
+                        progContainer.style.display = 'none';
+                        renderApprovalQueue();
+                    }
+                }, 300);
+            }
+        }
+
+        // --- SISTEMA OPERACIONAL SIMULADO ---
+        function simulateOpenFileInOS() {
+            showToast("Abrindo arquivo C:/Planilhas/produtos_campanha.csv no Excel...", "success");
+            logTerminal("Executando comando do sistema operacional: open C:/Planilhas/produtos_campanha.csv", "info");
+        }
+
+        // --- CONTROLE DE TEMA (LIGHT/DARK) ---
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.getElementById('theme-btn');
+            const select = document.getElementById('settings-theme-select');
+
+            body.classList.toggle('light-theme');
+
+            if (body.classList.contains('light-theme')) {
+                btn.textContent = 'Tema Escuro';
+                select.value = 'light';
+                logTerminal("Interface alterada para Tema Claro.", "info");
+            } else {
+                btn.textContent = 'Tema Claro';
+                select.value = 'dark';
+                logTerminal("Interface alterada para Tema Escuro.", "info");
+            }
+        }
+
+        function applySelectedTheme() {
+            const select = document.getElementById('settings-theme-select');
+            const body = document.body;
+            const btn = document.getElementById('theme-btn');
+
+            if (select.value === 'light') {
+                body.classList.add('light-theme');
+                btn.textContent = 'Tema Escuro';
+                logTerminal("Interface alterada para Tema Claro.", "info");
+            } else {
+                body.classList.remove('light-theme');
+                btn.textContent = 'Tema Claro';
+                logTerminal("Interface alterada para Tema Escuro.", "info");
+            }
+        }
+
+        // --- SISTEMA DE TOASTS ---
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast-el');
+            const msgEl = document.getElementById('toast-message');
+            
+            msgEl.textContent = message;
+            
+            // Remove classes antigas
+            toast.className = 'toast-notification';
+            if (type === 'success') toast.classList.add('success');
+            if (type === 'error') toast.classList.add('error');
+            
+            // Mostra o toast
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

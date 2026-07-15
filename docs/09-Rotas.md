@@ -10,10 +10,10 @@ As rotas da interface seguem a estrutura de painéis da barra de atividades (Act
 
 | Rota | Componente de Workspace | Painel de Contexto (Sidebar) | Descrição |
 | :--- | :--- | :--- | :--- |
-| `/` | Dashboard | Fila de Geração e Logs | Visão geral da plataforma e tarefas ativas. |
+| `/` | Monitor de Lote | Job Profiles e Console | Visão geral do processamento em massa e logs do worker. |
 | `/templates` | Editor HTML & Live Preview | Árvore de Templates Locais | Edição de templates e customização de variáveis. |
 | `/providers` | Tabela de Produtos (CRUD) / Configurações | Lista de Provedores | Gerenciamento de conexões SQL e arquivos Excel/CSV. |
-| `/publishers` | Configuração de Chaves & Fila | Lista de Publicadores | Configuração de destinos e histórico de publicações. |
+| `/outputs` | Galeria de Mídias | Biblioteca de Arquivos | Visualização e exportação das mídias geradas. |
 | `/settings` | Configurações do Sistema | Opções do Sistema | Definição de tema (Claro/Escuro) e caminhos de pastas. |
 
 ---
