@@ -1,2 +1,3 @@
-# rznd-media
-Plataforma Open Source para geração automatizada de conteúdo de produtos, integração com plataformas, bots e publicação em múltiplos canais utilizando templates HTML.
+A RZND Media é uma plataforma Open Source desenvolvida para automatizar todo o processo de criação e distribuição de conteúdo para produtos. A partir de um único template HTML, é possível gerar imagens, vídeos, páginas web e conteúdos para redes sociais, além de integrar diferentes fontes de dados (Providers) e publicar automaticamente em múltiplas plataformas (Publishers).
+
+A plataforma foi projetada com foco em arquitetura modular, funcionamento local (Offline First), extensibilidade por plugins e facilidade de uso tanto para afiliados quanto para pequenos negócios, e-commerces, agências e desenvolvedores.
