@@ -1,0 +1,29 @@
+<!-- templates/overlay-shopee/index.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Shopee Overlay Template</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="shopee-overlay-card">
+    <!-- Imagem capturada em alta resolução do produto como fundo -->
+    <div class="product-bg-img" style="background-image: url('{{Product.Image}}');"></div>
+    <div class="vignette"></div>
+    <div class="hud-overlay">
+      <div class="store-badge-row">
+        <!-- Logotipo configurável do marketplace -->
+        <span class="store-logo" id="hud-store-logo">SHOPEE</span>
+        <span class="discount-pill">{{Product.Tag}}</span>
+      </div>
+      <h1 class="hud-title">{{Product.Name}}</h1>
+      <div class="hud-price-box">
+        <span class="hud-label">OFERTA IMPERDÍVEL</span>
+        <span class="hud-val">R$ {{Product.Price}}</span>
+      </div>
+      <p class="hud-footer">{{Product.Footer}}</p>
+    </div>
+  </div>
+</body>
+</html>

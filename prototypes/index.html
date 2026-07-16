@@ -653,6 +653,89 @@
             margin-top: 4px;
         }
 
+        /* === OVERLAY SHOPEE TEMPLATE STYLES === */
+        .shopee-overlay-card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+        }
+        .shopee-overlay-card .product-bg-img {
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+        }
+        .shopee-overlay-card .vignette {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
+        }
+        .shopee-overlay-card .hud-overlay {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            text-align: left;
+        }
+        .shopee-overlay-card .store-badge-row {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .shopee-overlay-card .store-logo {
+            background-color: #ff5722;
+            color: #fff;
+            font-weight: 800;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 2px;
+        }
+        .shopee-overlay-card .discount-pill {
+            background-color: #ffeb3b;
+            color: #000;
+            font-weight: 700;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 2px;
+        }
+        .shopee-overlay-card .hud-title {
+            color: #fff !important;
+            font-size: 16px !important;
+            font-weight: 700 !important;
+            margin: 0 !important;
+            line-height: 1.3 !important;
+        }
+        .shopee-overlay-card .hud-price-box {
+            display: flex;
+            flex-direction: column;
+            background-color: rgba(255, 87, 34, 0.95);
+            padding: 6px 12px;
+            border-radius: 2px;
+            border-left: 4px solid #fff;
+            width: fit-content;
+        }
+        .shopee-overlay-card .hud-label {
+            color: rgba(255,255,255,0.8);
+            font-size: 8px;
+            font-weight: 600;
+        }
+        .shopee-overlay-card .hud-val {
+            color: #fff;
+            font-size: 20px;
+            font-weight: 800;
+        }
+        .shopee-overlay-card .hud-footer {
+            color: #9ca3af !important;
+            font-size: 9px !important;
+            margin: 0 !important;
+            border-top: none !important;
+            padding-top: 0 !important;
+        }
+
         /* Biblioteca de Arquivos Gerados (Outputs) */
         .output-grid {
             display: grid;
@@ -998,6 +1081,18 @@
                     </li>
                 </ul>
             </div>
+
+            <div class="explorer-section" style="border-top: 1px solid var(--border-color); padding-top: 8px; margin-top: 8px;">
+                <div class="explorer-section-title">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:2px;"><path stroke-linecap="round" stroke-linejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v12a2 2 0 01-2 2H5a2 2 0 01-2-2V5z"/></svg>
+                    MOLDURAS E OVERLAYS
+                </div>
+                <ul class="explorer-list">
+                    <li class="explorer-item" onclick="selectTemplate('overlay-shopee')">
+                        <div class="explorer-item-header">overlay-shopee.html</div>
+                    </li>
+                </ul>
+            </div>
         </div>
 
         <div class="context-explorer" id="sidebar-providers" style="display:none;">
@@ -1113,6 +1208,7 @@
                             <label class="form-label">Template de Saída</label>
                             <select class="form-input" id="job-template-select" onchange="updateJobMapping()">
                                 <option value="banner-produto">banner-produto (Fotos 1:1)</option>
+                                <option value="overlay-shopee">overlay-shopee (Moldura de Oferta 1:1)</option>
                                 <option value="social-post-instagram">social-post-instagram (Vídeo 9:16)</option>
                             </select>
                         </div>
@@ -1143,6 +1239,18 @@
                                 <span class="form-label" style="margin:0; font-size:10px;">{{Image}}:</span>
                                 <select class="form-input" id="job-map-image" style="font-size:11px; padding: 2px;" onchange="updateJobPreview()"></select>
                             </div>
+                        </div>
+
+                        <!-- Opção de Estilo de Logo -->
+                        <div style="border: 1px solid var(--border-color); padding: 8px; border-radius: 2px; display:flex; justify-content:space-between; align-items:center; background-color: var(--bg-main);">
+                            <div>
+                                <span class="form-label" style="font-weight:700; color:var(--text-primary); margin:0; font-size:10px;">LOGO DO MARKETPLACE</span>
+                                <p style="font-size:8.5px; color:var(--text-secondary); margin: 2px 0 0 0;">Exibir logotipo oficial da loja (Shopee, Amazon, etc.) na mídia.</p>
+                            </div>
+                            <label class="switch-container">
+                                <input type="checkbox" id="job-logo-toggle" checked onchange="toggleJobLogoSim()">
+                                <span class="switch-slider"></span>
+                            </label>
                         </div>
 
                         <!-- Organização por pastas -->
@@ -1964,6 +2072,10 @@
                 html: `<!-- banner-produto index.html -->\n<div class="template-card">\n  <div class="header-img">\n    <svg fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a1 1 0 011.414 0L16 17m0 0l1.586-1.586a1 1 0 011.414 0L21 18M9 11h.01M20 12a8 8 0 11-16 0 8 8 0 0116 0z"/></svg>\n  </div>\n  <div class="content">\n    <div class="tag">{{Product.Tag}}</div>\n    <h1 class="title">{{Product.Name}}</h1>\n    <div class="price">R$ {{Product.Price}}</div>\n    <p class="footer">{{Product.Footer}}</p>\n  </div>\n</div>`,
                 css: `/* banner-produto styles.css */\n.template-card {\n  width: 100%;\n  height: 100%;\n  background-color: #ffffff;\n  color: #111827;\n  display: flex;\n  flex-direction: column;\n}\n.tag {\n  color: #2563eb;\n  font-weight: 700;\n}\n.price {\n  color: #10b981;\n  font-weight: 800;\n}`
             },
+            'overlay-shopee': {
+                html: `<!-- overlay-shopee index.html -->\n<div class="shopee-overlay-card">\n  <div class="product-bg-img" id="hud-bg-img" style="background-image: url('https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=300');"></div>\n  <div class="vignette"></div>\n  <div class="hud-overlay">\n    <div class="store-badge-row">\n      <span class="store-logo" id="hud-store-logo">SHOPEE</span>\n      <span class="discount-pill">{{Product.Tag}}</span>\n    </div>\n    <h1 class="hud-title">{{Product.Name}}</h1>\n    <div class="hud-price-box">\n      <span class="hud-label">OFERTA IMPERDÍVEL</span>\n      <span class="hud-val">R$ {{Product.Price}}</span>\n    </div>\n    <p class="hud-footer">{{Product.Footer}}</p>\n  </div>\n</div>`,
+                css: `/* overlay-shopee styles.css */\n.shopee-overlay-card {\n  position: relative;\n  width: 100%;\n  height: 100%;\n  overflow: hidden;\n  background-color: #000;\n}\n.product-bg-img {\n  width: 100%;\n  height: 100%;\n  background-size: cover;\n  background-position: center;\n}\n.vignette {\n  position: absolute;\n  top: 0; left: 0; right: 0; bottom: 0;\n  background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);\n}\n.hud-overlay {\n  position: absolute;\n  bottom: 0; left: 0; right: 0;\n  padding: 16px;\n  display: flex;\n  flex-direction: column;\n  gap: 8px;\n}\n.store-badge-row {\n  display: flex;\n  gap: 6px;\n  align-items: center;\n}\n.store-logo {\n  background-color: #ff5722;\n  color: #fff;\n  font-weight: 800;\n  font-size: 10px;\n  padding: 2px 6px;\n  border-radius: 2px;\n}\n.discount-pill {\n  background-color: #ffeb3b;\n  color: #000;\n  font-weight: 700;\n  font-size: 10px;\n  padding: 2px 6px;\n  border-radius: 2px;\n}\n.hud-title {\n  color: #fff;\n  font-size: 16px;\n  font-weight: 700;\n  margin: 0;\n}\n.hud-price-box {\n  display: flex;\n  flex-direction: column;\n  background-color: rgba(255, 87, 34, 0.95);\n  padding: 6px 12px;\n  border-radius: 2px;\n  border-left: 4px solid #fff;\n  width: fit-content;\n}\n.hud-label {\n  color: rgba(255,255,255,0.8);\n  font-size: 8px;\n  font-weight: 600;\n}\n.hud-val {\n  color: #fff;\n  font-size: 20px;\n  font-weight: 800;\n}\n.hud-footer {\n  color: #9ca3af;\n  font-size: 9px;\n  margin: 0;\n}`
+            },
             'social-post-instagram': {
                 html: `<!-- social-post-instagram index.html -->\n<div class="instagram-post">\n  <div class="badge">{{Product.Tag}}</div>\n  <h2 class="title">{{Product.Name}}</h2>\n  <div class="price-bubble">Apenas R$ {{Product.Price}}!</div>\n  <div class="footer-note">{{Product.Footer}}</div>\n</div>`,
                 css: `/* social-post-instagram styles.css */\n.instagram-post {\n  width: 100%;\n  height: 100%;\n  background-color: #111114;\n  color: #ffffff;\n  padding: 24px;\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n  align-items: center;\n  text-align: center;\n}\n.badge {\n  background-color: #ef4444;\n  padding: 4px 8px;\n  font-size: 11px;\n  margin-bottom: 12px;\n  border-radius: 2px;\n}`
@@ -2195,6 +2307,18 @@
             showToast("Job Profile salvo com sucesso!", "success");
             const profName = activeJobProfileId;
             logJobConsole(`[SYSTEM] [SALVO] Configurações de Job Profile "${profName}" salvas em config/jobs.json`, "success");
+        }
+
+        function toggleJobLogoSim() {
+            const isChecked = document.getElementById('job-logo-toggle').checked;
+            logJobConsole(`[CONFIG] Exibição do logo do Marketplace definida como: ${isChecked ? 'EXIBIR' : 'OCULTAR'}`, "info");
+            showToast(`Logo ${isChecked ? 'ativado' : 'desativado'} para novas gerações.`, "info");
+            
+            // Atualiza preview se o template ativo for o overlay
+            const logoEl = document.getElementById('hud-store-logo');
+            if (logoEl) {
+                logoEl.style.display = isChecked ? 'inline-block' : 'none';
+            }
         }
 
         function toggleContinuousAutomationSim() {
@@ -2883,6 +3007,14 @@
                 document.getElementById('t-price').value = "34,90";
                 document.getElementById('t-category').value = "PROMOÇÃO GOURMET";
                 document.getElementById('t-footer').value = "*Válido apenas para delivery local.";
+            } else if (templateName === 'overlay-shopee') {
+                document.getElementById('t-title').value = "Tênis Running Max Air";
+                document.getElementById('t-price').value = "299,90";
+                document.getElementById('t-category').value = "SHOPEE OFERTA";
+                document.getElementById('t-footer').value = "*Link de redirecionamento na bio de ofertas.";
+                if (document.getElementById('t-image')) {
+                    document.getElementById('t-image').value = "https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=300";
+                }
             } else {
                 document.getElementById('t-title').value = "Camisa Polo Classic Blue";
                 document.getElementById('t-price').value = "89,90";
@@ -2934,12 +3066,52 @@
             const footerVal = document.getElementById('t-footer').value;
             const imageVal = document.getElementById('t-image') ? document.getElementById('t-image').value : '';
 
-            document.getElementById('preview-title-el').textContent = titleVal;
-            document.getElementById('preview-price-el').textContent = priceVal ? `R$ ${priceVal}` : '';
-            document.getElementById('preview-tag-el').textContent = categoryVal;
-            document.getElementById('preview-footer-el').textContent = footerVal;
-            if (imageVal) {
-                document.getElementById('preview-image-el').src = imageVal;
+            if (currentTemplateId === 'overlay-shopee') {
+                const container = document.getElementById('template-card-preview');
+                let htmlCode = templatesCode['overlay-shopee'].html;
+                htmlCode = htmlCode.replace('{{Product.Name}}', titleVal);
+                htmlCode = htmlCode.replace('{{Product.Price}}', priceVal);
+                htmlCode = htmlCode.replace('{{Product.Tag}}', categoryVal);
+                htmlCode = htmlCode.replace('{{Product.Footer}}', footerVal);
+
+                const imgUrl = imageVal || 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=300';
+                htmlCode = htmlCode.replace("url('https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=300')", `url('${imgUrl}')`);
+
+                container.innerHTML = htmlCode;
+
+                // Controla a visibilidade do logotipo oficial
+                const isLogoChecked = document.getElementById('job-logo-toggle') ? document.getElementById('job-logo-toggle').checked : true;
+                const activeLogoEl = document.getElementById('hud-store-logo');
+                if (activeLogoEl) {
+                    activeLogoEl.style.display = isLogoChecked ? 'inline-block' : 'none';
+                }
+            } else {
+                // Comportamento default para os templates com estrutura fixa
+                const container = document.getElementById('template-card-preview');
+                // Garante que a estrutura padrão exista se estiver saindo do modo overlay
+                if (!document.getElementById('preview-title-el')) {
+                    container.innerHTML = `
+                        <div class="template-card">
+                            <div class="header-img" style="height: 180px; display: flex; align-items: center; justify-content: center; background-color: var(--bg-surface); border-bottom: 1px solid var(--border-color);">
+                                <img id="preview-image-el" src="" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                            </div>
+                            <div class="content" style="padding: 12px; display: flex; flex-direction: column; gap: 4px;">
+                                <div class="tag" id="preview-tag-el" style="font-size: 11px; font-weight: 700; color: #2563eb;"></div>
+                                <h1 class="title" id="preview-title-el" style="font-size: 16px; margin: 0; color: #111827;"></h1>
+                                <div class="price" id="preview-price-el" style="font-size: 18px; font-weight: 800; color: #10b981;"></div>
+                                <p class="footer" id="preview-footer-el" style="font-size: 10px; margin: 0; color: #6b7280; font-style: italic;"></p>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                document.getElementById('preview-title-el').textContent = titleVal;
+                document.getElementById('preview-price-el').textContent = priceVal ? `R$ ${priceVal}` : '';
+                document.getElementById('preview-tag-el').textContent = categoryVal;
+                document.getElementById('preview-footer-el').textContent = footerVal;
+                if (imageVal && document.getElementById('preview-image-el')) {
+                    document.getElementById('preview-image-el').src = imageVal;
+                }
             }
         }
 
