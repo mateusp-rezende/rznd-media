@@ -1,0 +1,59 @@
+{
+  "mode": "watchlist",
+  "entries": [
+    {
+      "keyword": "Capacete",
+      "maxPrice": 5000,
+      "enabled": true
+    },
+    {
+      "keyword": "Notebook Dell Inspiron 15",
+      "maxPrice": 4500,
+      "enabled": true
+    },
+    {
+      "keyword": "Fone de Ouvido Bluetooth JBL",
+      "maxPrice": 300,
+      "enabled": true
+    },
+    {
+      "keyword": "iPhone 16 Pro",
+      "maxPrice": 7000,
+      "enabled": true
+    },
+    {
+      "keyword": "Tablet Samsung Galaxy Tab",
+      "maxPrice": 2000,
+      "enabled": true
+    }
+  ],
+  "activeEntries": [
+    {
+      "keyword": "Capacete",
+      "maxPrice": 5000,
+      "enabled": true
+    },
+    {
+      "keyword": "Notebook Dell Inspiron 15",
+      "maxPrice": 4500,
+      "enabled": true
+    },
+    {
+      "keyword": "Fone de Ouvido Bluetooth JBL",
+      "maxPrice": 300,
+      "enabled": true
+    },
+    {
+      "keyword": "iPhone 16 Pro",
+      "maxPrice": 7000,
+      "enabled": true
+    },
+    {
+      "keyword": "Tablet Samsung Galaxy Tab",
+      "maxPrice": 2000,
+      "enabled": true
+    }
+  ],
+  "trendEnabled": false,
+  "watchlistEnabled": true
+}

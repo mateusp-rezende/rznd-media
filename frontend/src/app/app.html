@@ -1,0 +1,535 @@
+<div class="shell">
+
+  <!-- ── Activity Bar (Far Left Navigation) ────────────────────── -->
+  <nav class="activity-bar" role="navigation" aria-label="Navegação do Painel">
+    <div class="activity-bar__brand" title="RZND Media">
+      <span class="brand-mark">RZ</span>
+    </div>
+
+    <ul class="activity-bar__nav" role="list">
+      <li>
+        <button class="activity-btn" [class.is-active]="activeModule === 'watchlist'"
+                (click)="switchModule('watchlist')" title="Watchlist / Sementes" aria-label="Watchlist">
+          <i data-lucide="list"></i>
+        </button>
+      </li>
+      <li>
+        <button class="activity-btn" [class.is-active]="activeModule === 'monitor'"
+                (click)="switchModule('monitor')" title="Motor de Monitoramento (Engine)" aria-label="Motor">
+          <i data-lucide="play-circle"></i>
+        </button>
+      </li>
+      <li>
+        <button class="activity-btn" [class.is-active]="activeModule === 'results'"
+                (click)="switchModule('results')" title="Comparações de Preço" aria-label="Resultados">
+          <i data-lucide="trending-down"></i>
+        </button>
+      </li>
+      <li>
+        <button class="activity-btn" [class.is-active]="activeModule === 'templates'"
+                (click)="switchModule('templates')" title="Editor de Templates" aria-label="Templates">
+          <i data-lucide="file-code"></i>
+        </button>
+      </li>
+      <li>
+        <button class="activity-btn" [class.is-active]="activeModule === 'outputs'"
+                (click)="switchModule('outputs')" title="Biblioteca de Anúncios" aria-label="Mídias">
+          <i data-lucide="image"></i>
+        </button>
+      </li>
+      <li>
+        <button class="activity-btn" [class.is-active]="activeModule === 'settings'"
+                (click)="switchModule('settings')" title="Configurações e APIs" aria-label="Configurações">
+          <i data-lucide="settings"></i>
+        </button>
+      </li>
+    </ul>
+
+    <div class="activity-bar__bottom">
+      <div class="status-dot status-dot--success" [class.status-dot--danger]="!status.isRunning" title="Status de conexão API"></div>
+    </div>
+  </nav>
+
+  <!-- ── Main Spacious Workspace ──────────────────────────────── -->
+  <main class="workspace">
+
+    <!-- ── 1. MODULE: WATCHLIST (Full Width CRUD) ──────────────── -->
+    <div class="panel-full" *ngIf="activeModule === 'watchlist'">
+      <header class="module-header">
+        <div>
+          <h1 class="module-title">Gerenciador de Watchlist</h1>
+          <p class="module-subtitle">Cadastre e altere as palavras-chave semente e limites de preço monitorados pelo robô.</p>
+        </div>
+        <div class="module-actions">
+          <div class="input-group-row">
+            <label for="mode-select">Modo de Operação:</label>
+            <select id="mode-select" class="select-field" [(ngModel)]="botMode">
+              <option value="trend">Apenas Trends (Shopee)</option>
+              <option value="watchlist">Apenas Watchlist</option>
+              <option value="both">Ambos (Watchlist + Trends)</option>
+            </select>
+          </div>
+          <button class="btn btn--outline" (click)="addWatchlistEntry()">
+            <i data-lucide="plus"></i> Adicionar Termo
+          </button>
+          <button class="btn btn--primary" (click)="saveWatchlist()">
+            <i data-lucide="save"></i> Salvar Watchlist
+          </button>
+        </div>
+      </header>
+
+      <div class="card-workspace">
+        <table class="watchlist-table" *ngIf="watchlistEntries.length > 0; else emptyWatchlistTmpl">
+          <thead>
+            <tr>
+              <th style="width: 80px; text-align: center;">Ativo</th>
+              <th>Termo de Pesquisa / Produto Semente</th>
+              <th style="width: 250px;">Preço Alvo Máximo (R$)</th>
+              <th style="width: 100px; text-align: center;">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let entry of watchlistEntries; let idx = index" [class.row-disabled]="!entry.enabled">
+              <td style="text-align: center;">
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="entry.enabled">
+                  <span class="toggle-slider"></span>
+                </label>
+              </td>
+              <td>
+                <input type="text" class="input-cell" [(ngModel)]="entry.query" placeholder="Ex: Capacete Pro Tork Evolution">
+              </td>
+              <td>
+                <div class="price-input-wrapper">
+                  <span class="currency-symbol">R$</span>
+                  <input type="number" class="input-cell price-field" [(ngModel)]="entry.targetPrice" placeholder="Sem limite" step="0.01">
+                </div>
+              </td>
+              <td style="text-align: center;">
+                <button class="btn-delete" (click)="deleteWatchlistEntry(idx)" title="Remover termo">
+                  <i data-lucide="trash-2"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <ng-template #emptyWatchlistTmpl>
+          <div class="empty-layout">
+            <i data-lucide="list-x" class="empty-icon"></i>
+            <h3>Nenhuma semente configurada</h3>
+            <p>Clique em "+ Adicionar Termo" para iniciar a configuração de monitoramento de ofertas.</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- ── 2. MODULE: MONITOR / ENGINE (Full Width Run & Terminal) ── -->
+    <div class="panel-full" *ngIf="activeModule === 'monitor'">
+      <header class="module-header">
+        <div>
+          <h1 class="module-title">Painel de Execução</h1>
+          <p class="module-subtitle">Execute o motor do bot em tempo real e assista a coleta de ofertas e disparo de campanhas.</p>
+        </div>
+      </header>
+
+      <div class="monitor-grid">
+        <!-- Control Card -->
+        <div class="card-workspace monitor-control">
+          <h3 class="card-workspace-title">Status da Engine</h3>
+          
+          <button class="btn-large-play" [disabled]="isScanning" (click)="triggerScan()">
+            <i data-lucide="play" *ngIf="!isScanning"></i>
+            <i data-lucide="loader" class="spin" *ngIf="isScanning"></i>
+            <span>{{ isScanning ? 'RODANDO CONSULTA EM LOTE...' : 'INICIAR MONITORAMENTO AGORA' }}</span>
+          </button>
+
+          <!-- Progress bar -->
+          <div class="progress-box" *ngIf="isScanning">
+            <div class="progress-info">
+              <span>{{ progressStatus }}</span>
+              <span>{{ progressPercent }}%</span>
+            </div>
+            <div class="progress-bar-track">
+              <div class="progress-bar-thumb" [style.width.%]="progressPercent"></div>
+            </div>
+          </div>
+
+          <!-- Steps workflow -->
+          <div class="flow-checklist">
+            <div class="flow-checklist-item" [class.is-active]="scanStep === 1" [class.is-success]="scanStep > 1">
+              <span class="checklist-dot"></span>
+              <div class="checklist-text">
+                <span class="checklist-title">Passo 1: Raspagem de Portais (Scrapers)</span>
+                <span class="checklist-status">{{ scanStep > 1 ? 'Concluído' : (scanStep === 1 ? 'Executando...' : 'Aguardando') }}</span>
+              </div>
+            </div>
+            <div class="flow-checklist-item" [class.is-active]="scanStep === 2" [class.is-success]="scanStep > 2">
+              <span class="checklist-dot"></span>
+              <div class="checklist-text">
+                <span class="checklist-title">Passo 2: Cruzamento de Preços e Médias</span>
+                <span class="checklist-status">{{ scanStep > 2 ? 'Concluído' : (scanStep === 2 ? 'Executando...' : 'Aguardando') }}</span>
+              </div>
+            </div>
+            <div class="flow-checklist-item" [class.is-active]="scanStep === 3" [class.is-success]="scanStep > 3">
+              <span class="checklist-dot"></span>
+              <div class="checklist-text">
+                <span class="checklist-title">Passo 3: Renderização Automática de Banner (Playwright)</span>
+                <span class="checklist-status">{{ scanStep > 3 ? 'Concluído' : (scanStep === 3 ? 'Executando...' : 'Aguardando') }}</span>
+              </div>
+            </div>
+            <div class="flow-checklist-item" [class.is-active]="scanStep === 4" [class.is-success]="scanStep > 4">
+              <span class="checklist-dot"></span>
+              <div class="checklist-text">
+                <span class="checklist-title">Passo 4: Publicação no Canal (Telegram Dispatcher)</span>
+                <span class="checklist-status">{{ scanStep > 4 ? 'Concluído' : (scanStep === 4 ? 'Executando...' : 'Aguardando') }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terminal Console Logs -->
+        <div class="card-workspace monitor-terminal">
+          <div class="terminal-header">
+            <span>CONSOLE TÉCNICO DE EVENTOS REAL</span>
+            <button class="btn-clear-terminal" (click)="clearLogs()">Limpar Console</button>
+          </div>
+          <div class="terminal-body" #consoleBody>
+            <div class="terminal-row" *ngFor="let log of parsedLogs">
+              <span class="t-time">[{{ log.time }}]</span>
+              <span class="t-level" [ngClass]="log.levelClass">[{{ log.level }}]</span>
+              <span class="t-category">[{{ log.category }}]</span>
+              <span class="t-msg">{{ log.message }}</span>
+            </div>
+            <div class="terminal-row empty" *ngIf="parsedLogs.length === 0">
+              <span class="t-msg italic gray">Pronto para capturar eventos...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 3. MODULE: COMPARAÇÕES (Full Width Pricing Results) ────── -->
+    <div class="panel-full" *ngIf="activeModule === 'results'">
+      <header class="module-header">
+        <div>
+          <h1 class="module-title">Comparador de Preços Cruzados</h1>
+          <p class="module-subtitle">Veja a lista de produtos analisados, suas respectivas médias e ofertas mais vantajosas.</p>
+        </div>
+        <div class="module-actions">
+          <button class="btn btn--outline" (click)="loadResults()"><i data-lucide="refresh-cw"></i> Atualizar</button>
+        </div>
+      </header>
+
+      <div class="results-workspace" *ngIf="clusters.length > 0; else noResultsTmpl">
+        <div class="results-grid">
+          
+          <div class="cluster-card-item" *ngFor="let cluster of clusters">
+            <div class="cluster-card-item__header">
+              <h3 class="cluster-title">{{ cluster.primaryTitle }}</h3>
+              <div class="cluster-badges">
+                <span class="badge-avg">Média: {{ getClusterAveragePrice(cluster) | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
+                <span class="badge-saving" *ngIf="getClusterSavingsPercent(cluster) as saving">Economia {{ saving }}%</span>
+              </div>
+            </div>
+
+            <div class="cluster-card-item__sections">
+              <!-- Section: Below average -->
+              <div class="price-section price-section--below" *ngIf="getOffersBelowAverage(cluster, getClusterAveragePrice(cluster)).length > 0">
+                <h4 class="section-title"><i data-lucide="trending-down"></i> Mais Baratos que a Média</h4>
+                <div class="offers-list">
+                  <div class="offer-item-row" *ngFor="let offer of getOffersBelowAverage(cluster, getClusterAveragePrice(cluster))" [class.is-cheapest]="cluster.cheapestOffer.id === offer.id">
+                    <div class="offer-item-row__left">
+                      <img class="offer-img" [src]="offer.imageUrl" alt="Foto do Produto" onerror="this.src='https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=150'">
+                      <div class="offer-meta">
+                        <span class="offer-title" [title]="offer.title">{{ offer.title }}</span>
+                        <span class="offer-store">
+                          {{ offer.provider }} 
+                          <span class="diff-tag diff-tag--below">{{ getOfferDifferenceText(offer.price, getClusterAveragePrice(cluster)).text }}</span>
+                        </span>
+                      </div>
+                    </div>
+                    <div class="offer-item-row__right">
+                      <div class="offer-pricing">
+                        <span class="old-price" *ngIf="offer.originalPrice">{{ offer.originalPrice | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
+                        <span class="new-price">{{ offer.price | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
+                      </div>
+                      <a [href]="offer.affiliateLink || offer.sourceUrl" target="_blank" class="btn-buy-row"><i data-lucide="external-link"></i></a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section: Real Discount -->
+              <div class="price-section price-section--discount" *ngIf="getOffersRealDiscount(cluster).length > 0">
+                <h4 class="section-title"><i data-lucide="percent"></i> Com Desconto Histórico/Real</h4>
+                <div class="offers-list">
+                  <div class="offer-item-row" *ngFor="let offer of getOffersRealDiscount(cluster)" [class.is-cheapest]="cluster.cheapestOffer.id === offer.id">
+                    <div class="offer-item-row__left">
+                      <img class="offer-img" [src]="offer.imageUrl" alt="Foto do Produto" onerror="this.src='https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=150'">
+                      <div class="offer-meta">
+                        <span class="offer-title" [title]="offer.title">{{ offer.title }}</span>
+                        <span class="offer-store">
+                          {{ offer.provider }} 
+                          <span class="diff-tag" [ngClass]="getOfferDifferenceText(offer.price, getClusterAveragePrice(cluster)).isBelow ? 'diff-tag--below' : 'diff-tag--above'">
+                            {{ getOfferDifferenceText(offer.price, getClusterAveragePrice(cluster)).text }}
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                    <div class="offer-item-row__right">
+                      <div class="offer-pricing">
+                        <span class="old-price" *ngIf="offer.originalPrice">{{ offer.originalPrice | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
+                        <span class="new-price">{{ offer.price | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
+                      </div>
+                      <a [href]="offer.affiliateLink || offer.sourceUrl" target="_blank" class="btn-buy-row"><i data-lucide="external-link"></i></a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section: Other -->
+              <div class="price-section price-section--other" *ngIf="getOffersOther(cluster, getClusterAveragePrice(cluster)).length > 0">
+                <h4 class="section-title"><i data-lucide="arrow-right"></i> Outras Ofertas / Acima da Média</h4>
+                <div class="offers-list">
+                  <div class="offer-item-row" *ngFor="let offer of getOffersOther(cluster, getClusterAveragePrice(cluster))" [class.is-cheapest]="cluster.cheapestOffer.id === offer.id">
+                    <div class="offer-item-row__left">
+                      <img class="offer-img" [src]="offer.imageUrl" alt="Foto do Produto" onerror="this.src='https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=150'">
+                      <div class="offer-meta">
+                        <span class="offer-title" [title]="offer.title">{{ offer.title }}</span>
+                        <span class="offer-store">
+                          {{ offer.provider }} 
+                          <span class="diff-tag diff-tag--above">{{ getOfferDifferenceText(offer.price, getClusterAveragePrice(cluster)).text }}</span>
+                        </span>
+                      </div>
+                    </div>
+                    <div class="offer-item-row__right">
+                      <div class="offer-pricing">
+                        <span class="old-price" *ngIf="offer.originalPrice">{{ offer.originalPrice | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
+                        <span class="new-price">{{ offer.price | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
+                      </div>
+                      <a [href]="offer.affiliateLink || offer.sourceUrl" target="_blank" class="btn-buy-row"><i data-lucide="external-link"></i></a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <ng-template #noResultsTmpl>
+        <div class="empty-layout card-workspace" style="padding: 60px 20px;">
+          <i data-lucide="search-x" class="empty-icon"></i>
+          <h3>Nenhuma comparação encontrada</h3>
+          <p>Execute um ciclo de monitoramento no painel de execução para ver os clusters de preços comparados.</p>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- ── 4. MODULE: TEMPLATES EDITOR (Split Code & Preview) ────── -->
+    <div class="panel-full h-100" *ngIf="activeModule === 'templates'">
+      <div class="split-editor-container">
+        
+        <!-- Left Sidebar: Controls & Variables -->
+        <div class="split-side shadow-surface">
+          <h3 class="split-side-title">Configurar Preview</h3>
+          
+          <!-- Template selector -->
+          <div class="form-group-col">
+            <label>Template Selecionado</label>
+            <div class="segmented-tabs">
+              <button class="seg-btn" [class.active]="activeTemplate === 'overlay-shopee'" (click)="switchTemplate('overlay-shopee')">Shopee Overlay</button>
+              <button class="seg-btn" [class.active]="activeTemplate === 'carrossel-fotos'" (click)="switchTemplate('carrossel-fotos')">Carrossel Geral</button>
+              <button class="seg-btn" [class.active]="activeTemplate === 'videos-curtos'" (click)="switchTemplate('videos-curtos')">Vídeos Curtos</button>
+            </div>
+          </div>
+
+          <hr class="divider">
+
+          <div class="form-group-col">
+            <label for="t-title">Product.Name (Título)</label>
+            <input id="t-title" type="text" class="input-text" [(ngModel)]="tTitle" (input)="updateTemplatePreview()">
+          </div>
+          <div class="form-group-col">
+            <label for="t-price">Product.Price (Preço R$)</label>
+            <input id="t-price" type="text" class="input-text" [(ngModel)]="tPrice" (input)="updateTemplatePreview()">
+          </div>
+          <div class="form-group-col">
+            <label for="t-category">Product.Tag (Desconto)</label>
+            <input id="t-category" type="text" class="input-text" [(ngModel)]="tCategory" (input)="updateTemplatePreview()">
+          </div>
+          <div class="form-group-col">
+            <label for="t-footer">Product.Footer (Comparativo)</label>
+            <input id="t-footer" type="text" class="input-text" [(ngModel)]="tFooter" (input)="updateTemplatePreview()">
+          </div>
+          <div class="form-group-col">
+            <label for="t-image">Product.Image (URL)</label>
+            <input id="t-image" type="text" class="input-text" [(ngModel)]="tImage" (input)="updateTemplatePreview()">
+          </div>
+
+          <button class="btn btn--primary w-100" style="margin-top: auto;" (click)="saveTemplate()">
+            <i data-lucide="save"></i> Salvar Alterações
+          </button>
+        </div>
+
+        <!-- Center Editor: Lines & Textarea -->
+        <div class="split-center">
+          <div class="editor-tabs-bar">
+            <button class="editor-tab-btn" [class.active]="activeEditorTab === 'html'" (click)="switchEditorTab('html')">
+              <i data-lucide="file-code" style="color: #e44d26;"></i> index.html
+            </button>
+            <button class="editor-tab-btn" [class.active]="activeEditorTab === 'css'" (click)="switchEditorTab('css')">
+              <i data-lucide="file-code" style="color: #264de4;"></i> styles.css
+            </button>
+          </div>
+          <div class="editor-content-area">
+            <div class="editor-gutters">
+              <span *ngFor="let n of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30]">{{ n }}</span>
+            </div>
+            <textarea class="editor-textarea-control" [(ngModel)]="templateCode" (input)="updateTemplatePreview()" spellcheck="false"></textarea>
+          </div>
+        </div>
+
+        <!-- Right Preview: Visual compiled template -->
+        <div class="split-right">
+          <h3 class="split-side-title">Live Preview (1:1 aspect)</h3>
+          <div class="preview-card-frame" id="template-card-preview">
+            <!-- Dynamic Iframe will render here -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── 5. MODULE: BIBLIOTECA / GALLERY ─────────────────────── -->
+    <div class="panel-full" *ngIf="activeModule === 'outputs'">
+      <header class="module-header">
+        <div>
+          <h1 class="module-title">Biblioteca de Criativos</h1>
+          <p class="module-subtitle">Acesse todas as imagens promocionais e legendas prontas geradas nos ciclos anteriores.</p>
+        </div>
+        <div class="module-actions">
+          <button class="btn btn--outline" (click)="loadOutputs()"><i data-lucide="refresh-cw"></i> Atualizar</button>
+        </div>
+      </header>
+
+      <div class="gallery-workspace" *ngIf="outputs.length > 0; else noOutputsTmpl">
+        <div class="gallery-grid">
+          
+          <div class="output-card-item" *ngFor="let out of outputs">
+            <div class="output-image-box">
+              <img [src]="out.imageUrl" alt="Criativo do Anúncio">
+            </div>
+            <div class="output-card-info">
+              <h4 class="output-title" [title]="out.title">{{ out.title }}</h4>
+              <div class="output-meta-row">
+                <span class="output-price">{{ out.price }}</span>
+                <span class="output-store">{{ out.provider }}</span>
+              </div>
+            </div>
+            <div class="output-card-buttons">
+              <a [href]="out.imageUrl" [download]="out.title + '.png'" class="btn btn--primary btn-sm"><i data-lucide="download"></i> Baixar</a>
+              <button class="btn btn--outline btn-sm" (click)="copyCaption(out.caption)"><i data-lucide="copy"></i> Copiar Legenda</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <ng-template #noOutputsTmpl>
+        <div class="empty-layout card-workspace" style="padding: 60px 20px;">
+          <i data-lucide="image-off" class="empty-icon"></i>
+          <h3>Nenhum criativo gerado ainda</h3>
+          <p>Dispare a varredura no painel de execução. As mídias geradas via Playwright serão listadas aqui.</p>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- ── 6. MODULE: CONFIGURAÇÕES (Full Width Form) ────────────── -->
+    <div class="panel-full" *ngIf="activeModule === 'settings'">
+      <header class="module-header">
+        <div>
+          <h1 class="module-title">Configurações do Robô</h1>
+          <p class="module-subtitle">Configure as chaves das APIs de consulta de preços e os dados do canal de divulgação.</p>
+        </div>
+        <div class="module-actions">
+          <button class="btn btn--primary" (click)="saveSettings()"><i data-lucide="save"></i> Salvar Configurações</button>
+        </div>
+      </header>
+
+      <div class="settings-workspace grid-2">
+        <!-- Section: APIs credentials -->
+        <div class="card-workspace form-box">
+          <h3 class="card-workspace-title">Credenciais de APIs</h3>
+          
+          <div class="form-grid-columns">
+            <div class="form-group-col">
+              <label for="set-shopee-id">Shopee App ID</label>
+              <input id="set-shopee-id" type="text" class="input-text" [(ngModel)]="shopeeId" placeholder="App ID do Afiliado">
+            </div>
+            <div class="form-group-col">
+              <label for="set-shopee-secret">Shopee App Secret</label>
+              <input id="set-shopee-secret" type="password" class="input-text" [(ngModel)]="shopeeSecret" placeholder="App Secret de Afiliado">
+            </div>
+            <div class="form-group-col">
+              <label for="set-shopee-tag">Shopee Partner Tag</label>
+              <input id="set-shopee-tag" type="text" class="input-text" [(ngModel)]="shopeeTag" placeholder="Tag de afiliado (Ex: tag-20)">
+            </div>
+            <div class="form-group-col">
+              <label for="set-amazon-tag">Amazon Associate Tag</label>
+              <input id="set-amazon-tag" type="text" class="input-text" [(ngModel)]="amazonTag" placeholder="Sua tag de afiliado Amazon">
+            </div>
+            <div class="form-group-col">
+              <label for="set-magalu-store">Magalu ID Parceiro</label>
+              <input id="set-magalu-store" type="text" class="input-text" [(ngModel)]="magaluStore" placeholder="Ex: magazinemediacenter">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Telegram Publisher -->
+        <div class="card-workspace form-box">
+          <h3 class="card-workspace-title">Divulgação Automática (Telegram)</h3>
+          
+          <div class="form-grid-columns">
+            <div class="form-group-col">
+              <label for="set-tele-token">Telegram Bot Token</label>
+              <input id="set-tele-token" type="password" class="input-text" [(ngModel)]="telegramToken" placeholder="Bot Token da BotFather">
+            </div>
+            <div class="form-group-col">
+              <label for="set-tele-channel">ID do Canal/Grupo Destino</label>
+              <input id="set-tele-channel" type="text" class="input-text" [(ngModel)]="telegramChannel" placeholder="Ex: @meucanalofertas ou ID numérico">
+            </div>
+          </div>
+
+          <div class="info-alert" style="margin-top: 24px;">
+            <i data-lucide="info"></i>
+            <p>O robô irá publicar as artes finais e links afiliados automaticamente neste canal assim que qualificar ofertas mais baratas que a média do mercado.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── Status Bar (Bottom Footer) ─────────────────────────────── -->
+<footer class="status-bar" role="status" aria-live="polite">
+  <div class="status-bar__left">
+    <span class="status-indicator">
+      <span class="status-dot" [ngClass]="status.isRunning ? 'status-dot--success' : 'status-dot--danger'"></span>
+      <span>{{ status.isRunning ? 'Worker Ativo' : 'Desconectado' }}</span>
+    </span>
+    <span class="status-bar__sep">|</span>
+    <span>Uptime: {{ status.uptime }}</span>
+    <span class="status-bar__sep">|</span>
+    <span>Último Scan: {{ status.lastScanAt ? status.lastScanDate + ' às ' + status.lastScanAt : 'nunca executado' }}</span>
+  </div>
+  <div class="status-bar__right">
+    <span>Angular 18 Workspace</span>
+    <span class="status-bar__sep">|</span>
+    <span>FuzzySharp 2.0</span>
+  </div>
+</footer>
