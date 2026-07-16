@@ -2166,12 +2166,14 @@
         // --- AÇÕES DO PAINEL DE APROVAÇÃO (DASHBOARD) ---
         function renderApprovalQueue() {
             const listContainer = document.getElementById('approval-queue-list');
+            if (!listContainer) return;
             listContainer.innerHTML = '';
 
             if (approvalQueue.length === 0) {
                 listContainer.innerHTML = `<div style="padding: 16px; text-align:center; color:var(--text-secondary);">Fila de aprovação vazia.</div>`;
                 return;
             }
+        }
 
         // --- MONITOR DE LOTE (BATCH RUNTIME & AUTOMATION) ---
 
